@@ -1,0 +1,48 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description = '橡树旁 — Carol Hu 的个人网站:数据、AI 与长期主义' } = Astro.props;
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (p: string) => (p === '/' ? path === '/' : path.startsWith(p));
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <nav class="nav">
+      <a class="brand" href="/">
+        <svg width="22" height="22" viewBox="0 0 64 64" aria-hidden="true">
+          <rect width="64" height="64" rx="14" fill="#2f4a32"/>
+          <rect x="29" y="8" width="5" height="12" rx="2.5" fill="#5b3d24" transform="rotate(10 31.5 14)"/>
+          <path d="M15 27 Q32 11 49 27 L46.5 34 Q32 26.5 17.5 34 Z" fill="#8a5a35"/>
+          <path d="M17.5 34 Q32 27 46.5 34 Q47.5 50 32 57 Q16.5 50 17.5 34 Z" fill="#c9a06b"/>
+        </svg>
+        橡树旁
+      </a>
+      <div class="links">
+        <a href="/" class={isActive('/') ? 'active' : ''}>首页</a>
+        <a href="/blog" class={isActive('/blog') ? 'active' : ''}>文章</a>
+        <a href="/about" class={isActive('/about') ? 'active' : ''}>关于</a>
+      </div>
+    </nav>
+
+    <main class="main">
+      <slot />
+    </main>
+
+    <footer class="footer">
+      <p class="poem">根,紧握在地下;叶,相触在云里。—— 舒婷《致橡树》</p>
+      <p>橡树旁 Beside the Oak · caroldearoak.com · © Carol Hu</p>
+    </footer>
+  </body>
+</html>

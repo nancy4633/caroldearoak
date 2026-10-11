@@ -1,0 +1,38 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="关于我 · 橡树旁" description="Carol Hu 胡惠敏 — 数据/AI 工程师,十八年数据工程经验。">
+  <div class="post-header">
+    <h1>关于我</h1>
+    <p class="meta">Carol Hu · 胡惠敏 · Data / AI Engineer</p>
+  </div>
+
+  <article class="prose">
+    <h2>一句话</h2>
+    <p>写了十八年数据:从大型机的批处理,到云上数仓、血缘与指标平台,再到知识图谱、RAG 和 Agent。相信数据系统是一门手艺,<b>数据是根,智能是叶</b>——根扎得不深,叶子再绿也是塑料的。</p>
+
+    <!-- 【替换】以下经历段请按可公开口径修改:不写在职公司的内部项目细节,用"某出行平台"这类脱敏表述 -->
+    <h2>经历</h2>
+    <ul>
+      <li><b>数据平台与治理</b>:维度建模、指标口径治理、血缘与元数据平台、Schema 变更管理。</li>
+      <li><b>分析与 BI</b>:OLAP 引擎选型与调优、ChatBI / Headless BI、语义层。</li>
+      <li><b>AI 工程</b>:知识图谱(Neo4j / 本体建模)、RAG 与自迭代知识库、Text-to-SQL、数据 Agent。</li>
+      <li><b>具身智能数据</b>:具身数据工厂 DataPipeline,LeRobot 数据集互操作。</li>
+    </ul>
+
+    <h2 id="projects">项目</h2>
+    <h3>DataPipeline — 具身数据工厂</h3>
+    <p>面向具身智能的数据生产流水线:数据画像、质量估值、LeRobot V2.1 格式导出。工程轨道与估值轨道双线推进,目标是让机器人数据"可评估、可复用"。</p>
+    <h3>自迭代知识库(本地)</h3>
+    <p>Qdrant + Neo4j + Ollama + LangGraph 的本地知识库:向量召回与子图召回并行,知识入库后自动迭代索引。不依赖云端 API,一台 Mac 跑通全链路。</p>
+
+    <h2>为什么叫"橡树旁"</h2>
+    <p>取自舒婷《致橡树》。诗里说,我不做攀援的凌霄花,我要作为树的形象,和你站在一起——<b>独立而并肩</b>,这是我喜欢的工作关系,也是我想成为的工程师的样子。域名 caroldearoak.com 里藏着一封写给橡树的信:Dear Oak。</p>
+    <blockquote>根,紧握在地下,叶,相触在云里。每一阵风过,我们都互相致意。</blockquote>
+
+    <h2 id="contact">联系</h2>
+    <p>邮箱:carol@caroldearoak.com(开通中)<br/>
+    <!-- 【替换】填上你的 GitHub / 其他主页链接 -->
+    GitHub:<a href="https://github.com/" target="_blank">待填</a></p>
+  </article>
+</Base>

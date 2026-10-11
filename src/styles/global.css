@@ -1,0 +1,146 @@
+/* 橡树旁 Beside the Oak — 全局样式 */
+:root {
+  --bg: #faf8f2;
+  --ink: #232a21;
+  --muted: #66705e;
+  --oak: #2f4a32;
+  --bark: #6b4a32;
+  --acorn: #8a5a35;
+  --card: #ffffff;
+  --line: #e5dfd0;
+  --code-bg: #f1ede1;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #151a13;
+    --ink: #e7e5da;
+    --muted: #9aa38e;
+    --oak: #93b491;
+    --bark: #c9a06b;
+    --acorn: #c9a06b;
+    --card: #1c231a;
+    --line: #2b3327;
+    --code-bg: #212920;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--bg); }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  font-size: 16px;
+  line-height: 1.85;
+}
+
+h1, h2, h3, .serif {
+  font-family: "Songti SC", "Noto Serif SC", "STSong", serif;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+a { color: var(--oak); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── 导航 ─────────────────────── */
+.nav {
+  display: flex; align-items: center; justify-content: space-between;
+  max-width: 760px; margin: 0 auto; padding: 22px 24px 0;
+}
+.nav .brand {
+  display: flex; align-items: center; gap: 9px;
+  font-family: "Songti SC", "Noto Serif SC", serif;
+  font-size: 19px; font-weight: 700; color: var(--ink);
+}
+.nav .brand svg { display: block; }
+.nav .links { display: flex; gap: 26px; font-size: 15px; }
+.nav .links a { color: var(--muted); }
+.nav .links a:hover, .nav .links a.active { color: var(--oak); text-decoration: none; }
+
+/* ── 版心 ─────────────────────── */
+.main { max-width: 760px; margin: 0 auto; padding: 0 24px 60px; }
+
+/* ── 首页 hero ─────────────────── */
+.hero { padding: 68px 0 30px; text-align: center; }
+.hero h1 {
+  font-size: 54px; margin: 18px 0 6px; letter-spacing: 0.12em;
+}
+.hero .en {
+  color: var(--acorn); font-size: 15px; letter-spacing: 0.28em;
+  text-transform: uppercase; margin: 0 0 26px;
+}
+.hero .slogan {
+  font-family: "Songti SC", "Noto Serif SC", serif;
+  font-size: 18px; color: var(--muted); margin: 26px auto 8px; max-width: 30em;
+}
+.hero .who { font-size: 14px; color: var(--muted); margin-top: 20px; }
+.hero .who b { color: var(--ink); font-weight: 600; }
+
+/* ── 卡片 ─────────────────────── */
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 44px 0 10px; }
+@media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
+.card {
+  display: block; background: var(--card); border: 1px solid var(--line);
+  border-radius: 10px; padding: 22px 20px; color: var(--ink);
+}
+.card:hover { border-color: var(--oak); text-decoration: none; }
+.card .t { font-size: 17px; font-weight: 600; margin-bottom: 6px; color: var(--oak); }
+.card .d { font-size: 13.5px; color: var(--muted); line-height: 1.7; }
+
+/* ── 区块 ─────────────────────── */
+.section { margin: 52px 0 0; }
+.section > h2 {
+  font-size: 24px; margin: 0 0 8px;
+  border-bottom: 1px solid var(--line); padding-bottom: 12px;
+}
+.section .sub { color: var(--muted); font-size: 14px; margin: 0 0 18px; }
+
+/* ── 文章列表 ─────────────────── */
+.post-list { list-style: none; margin: 0; padding: 0; }
+.post-list li {
+  border-bottom: 1px dashed var(--line); padding: 18px 2px;
+}
+.post-list .date { font-size: 13px; color: var(--acorn); font-variant-numeric: tabular-nums; }
+.post-list .title { font-size: 18px; font-weight: 600; }
+.post-list .desc { font-size: 14px; color: var(--muted); margin-top: 4px; }
+
+/* ── 正文排版 ─────────────────── */
+.post-header { padding: 56px 0 6px; }
+.post-header h1 { font-size: 34px; margin: 0 0 10px; }
+.post-header .meta { color: var(--muted); font-size: 14px; }
+.prose { padding-top: 18px; }
+.prose h2 { font-size: 24px; margin: 1.6em 0 0.5em; }
+.prose h3 { font-size: 19px; margin: 1.4em 0 0.4em; }
+.prose p { margin: 0.8em 0; }
+.prose blockquote {
+  margin: 1.2em 0; padding: 4px 18px; border-left: 3px solid var(--acorn);
+  background: var(--code-bg); color: var(--muted); border-radius: 0 6px 6px 0;
+}
+.prose blockquote p { margin: 0.5em 0; }
+.prose code {
+  font-family: Menlo, Monaco, "Courier New", monospace; font-size: 0.86em;
+  background: var(--code-bg); padding: 2px 6px; border-radius: 4px;
+}
+.prose pre {
+  background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px;
+  padding: 14px 16px; overflow-x: auto; line-height: 1.6;
+}
+.prose pre code { background: none; padding: 0; font-size: 13px; }
+.prose table { border-collapse: collapse; width: 100%; margin: 1em 0; font-size: 14px; }
+.prose th, .prose td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; }
+.prose th { background: var(--code-bg); }
+.prose img { max-width: 100%; }
+.back { display: inline-block; margin-top: 44px; font-size: 14px; color: var(--muted); }
+
+/* ── 页脚 ─────────────────────── */
+.footer {
+  max-width: 760px; margin: 0 auto; padding: 30px 24px 44px;
+  border-top: 1px solid var(--line);
+  text-align: center; font-size: 13px; color: var(--muted);
+}
+.footer .poem { font-family: "Songti SC", "Noto Serif SC", serif; letter-spacing: 0.06em; }
