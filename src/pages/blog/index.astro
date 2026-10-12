@@ -7,11 +7,19 @@ const posts = Object.entries(await import.meta.glob('../../blog/*.md', { eager: 
     ...mod.frontmatter,
   }))
   .sort((a: any, b: any) => String(b.date).localeCompare(String(a.date)));
+
+const allTags = Array.from(new Set(posts.flatMap((p: any) => p.tags || [])));
 ---
 <Base title="文章 · 橡树旁" description="橡树旁的文章:数据工程、知识图谱、RAG 与 Agent。">
   <div class="post-header">
     <h1>文章</h1>
     <p class="meta">踩过坑之后的真话。</p>
+    <div class="tags">
+      <a class="tag-chip" href="/blog/">全部</a>
+      {allTags.map((t: string) => (
+        <a class="tag-chip" href={`/blog/tag/${t}/`}>{t}</a>
+      ))}
+    </div>
   </div>
   <ul class="post-list">
     {posts.map((p: any) => (
@@ -19,6 +27,13 @@ const posts = Object.entries(await import.meta.glob('../../blog/*.md', { eager: 
         <span class="date">{p.date}</span>
         <div class="title"><a href={`/blog/${p.slug}/`}>{p.title}</a></div>
         {p.description && <div class="desc">{p.description}</div>}
+        {(p.tags?.length ?? 0) > 0 && (
+          <div class="tags">
+            {p.tags.map((t: string) => (
+              <a class="tag-chip" href={`/blog/tag/${t}/`}>{t}</a>
+            ))}
+          </div>
+        )}
       </li>
     ))}
   </ul>

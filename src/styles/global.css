@@ -1,4 +1,4 @@
-/* 橡树旁 Beside the Oak — 全局样式 */
+/* 橡树旁 Roots & Clouds — 全局样式 */
 :root {
   --bg: #faf8f2;
   --ink: #232a21;
@@ -99,6 +99,16 @@ a:hover { text-decoration: underline; }
   border-bottom: 1px solid var(--line); padding-bottom: 12px;
 }
 .section .sub { color: var(--muted); font-size: 14px; margin: 0 0 18px; }
+
+/* ── 标签/系列 ─────────────────── */
+.tags { margin: 6px 0 0; }
+.tag-chip {
+  display: inline-block; font-size: 12px; padding: 1px 11px;
+  border: 1px solid var(--line); border-radius: 999px;
+  color: var(--muted); margin: 0 6px 6px 0;
+}
+.tag-chip:hover { color: var(--oak); border-color: var(--oak); text-decoration: none; }
+.tag-chip.on { color: var(--card); background: var(--oak); border-color: var(--oak); }
 
 /* ── 文章列表 ─────────────────── */
 .post-list { list-style: none; margin: 0; padding: 0; }
