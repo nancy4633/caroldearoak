@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>实体与知识关联 · 多模态数据工厂</title>
+<script src="../assets/js/tailwindcss.js"></script>
+<script src="../assets/js/iconify-icon.min.js"></script>
+<style>
+  :root{--primary:#1677ff;--primary-weak:#eaf2ff;--success:#52c41a;--warning:#faad14;--error:#ff4d4f;--text:#1f2329;--text-2:#5c6570;--text-3:#8a94a6;--line:#e6eaf0;--bg:#f5f7fa}
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+  a{color:inherit;text-decoration:none} button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  iconify-icon{display:inline-flex;align-items:center;justify-content:center}
+  .num{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .card{background:#fff;border:1px solid var(--line);border-radius:10px}
+  .tb-ico{display:grid;place-items:center;width:32px;height:32px;border-radius:7px;color:#5c6570}
+  .tb-ico:hover{background:#f2f5fa;color:#1677ff}
+  .nav-group{padding:14px 10px 6px;font-size:11px;letter-spacing:.08em;color:#9aa3b2;font-weight:600}
+  .nav-item{display:flex;align-items:center;gap:9px;height:36px;padding:0 10px;border-radius:7px;color:#4a5361;margin-bottom:2px;font-size:13px}
+  .nav-item:hover{background:#f4f7fb;color:#1677ff}
+  .nav-item iconify-icon{font-size:16px;color:#7b8494;flex:none}
+  .nav-item.active{background:var(--primary-weak);color:var(--primary);font-weight:600}
+  .nav-item.active iconify-icon{color:var(--primary)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 12px;border-radius:7px;border:1px solid var(--line);background:#fff;font-size:13px;color:var(--text);transition:.15s;white-space:nowrap}
+  .btn:hover{border-color:#1677ff;color:#1677ff}
+  .btn-primary{background:var(--primary);border-color:var(--primary);color:#fff}
+  .btn-primary:hover{background:#4096ff;border-color:#4096ff;color:#fff}
+  .btn-sm{height:28px;padding:0 9px;font-size:12px}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .inp{height:32px;border:1px solid var(--line);border-radius:7px;padding:0 10px;font-size:13px;background:#fff;color:var(--text);outline:none;width:100%}
+  .inp:focus{border-color:#1677ff;box-shadow:0 0 0 3px rgba(22,119,255,.1)}
+  .tag{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 7px;border-radius:5px;font-size:12px;line-height:1;border:1px solid transparent;white-space:nowrap}
+  .tag-blue{background:#eaf2ff;border-color:#c9ddff;color:#1677ff}
+  .tag-green{background:#f0fbe9;border-color:#cdebb8;color:#3f9c12}
+  .tag-orange{background:#fff8e8;border-color:#ffe1a8;color:#c77c00}
+  .tag-red{background:#fff1f0;border-color:#ffccc7;color:#d4380d}
+  .tag-gray{background:#f4f6f9;border-color:#e3e8ef;color:#5c6570}
+  .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+  .mask{position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:80;display:none}
+  .mask.open{display:block}
+  .drawer{position:fixed;top:0;right:0;height:100%;width:520px;max-width:94vw;background:#fff;z-index:90;box-shadow:-8px 0 32px rgba(15,23,42,.12);transform:translateX(103%);transition:transform .22s ease;display:flex;flex-direction:column}
+  .drawer.open{transform:none}
+  .dlg{position:fixed;z-index:100;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;box-shadow:0 24px 64px rgba(15,23,42,.22);width:600px;max-width:94vw;max-height:88vh;display:none;flex-direction:column;overflow:hidden}
+  .dlg.open{display:flex}
+  .toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-10px);z-index:120;background:#1f2329;color:#fff;font-size:13px;padding:9px 16px;border-radius:8px;opacity:0;transition:.2s;pointer-events:none;display:flex;align-items:center;gap:7px}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .scroll-none{scrollbar-width:none} .scroll-none::-webkit-scrollbar{display:none}
+  .scroll-thin{scrollbar-width:thin;scrollbar-color:#d5dbe5 transparent}
+  .scroll-thin::-webkit-scrollbar{width:6px;height:6px}
+  .scroll-thin::-webkit-scrollbar-thumb{background:#d5dbe5;border-radius:3px}
+  .link{color:#1677ff} .link:hover{text-decoration:underline}
+  .ent{border:1px solid #eef1f6;border-radius:8px;padding:8px 10px;text-align:left;width:100%;background:#fff;transition:.15s}
+  .ent:hover{border-color:#91caff;background:#fbfdff}
+  .ent.on{border-color:#1677ff;background:#f5f9ff;box-shadow:0 0 0 3px rgba(22,119,255,.08)}
+  .gnode{cursor:pointer;transition:.15s}
+  .gnode:hover circle{r:31}
+  .gnode text{pointer-events:none;font-family:-apple-system,"PingFang SC",sans-serif}
+  .gedge{transition:.2s}
+  .gedge.dim{opacity:.18}
+  .diff-col{border:1px solid #eef1f6;border-radius:8px;padding:10px;font-size:12px;line-height:1.9}
+  .diff-col.left{background:#fffdf7;border-color:#ffe7c2}
+  .diff-col.right{background:#f7fbff;border-color:#cfe3ff}
+</style>
+</head>
+<body>
+<header class="h-14 bg-white border-b border-[#e6eaf0] flex items-center gap-3 px-4 sticky top-0 z-40">
+<a class="flex items-center gap-2.5 pr-2 min-w-[208px]" href="home.html">
+<span class="w-7 h-7 rounded-[8px] bg-[#1677ff] text-white grid place-items-center text-[12px] font-bold">DF</span>
+<span class="text-[15px] font-semibold whitespace-nowrap">多模态数据工厂</span>
+<span class="text-[10px] leading-4 px-1 rounded bg-[#eef4ff] text-[#1677ff] border border-[#cfe0ff]">ENT</span>
+</a>
+<button class="hidden lg:flex items-center gap-2 h-8 px-2.5 rounded-md border border-[#e6eaf0] text-[12.5px] hover:bg-[#f7f9fc] whitespace-nowrap">
+<iconify-icon class="text-[14px] text-[#5c6570]" icon="lucide:layers"></iconify-icon><span>高校科研数据空间</span>
+<iconify-icon class="text-[12px] text-[#8a94a6]" icon="lucide:chevron-down"></iconify-icon>
+</button>
+<div class="flex-1 min-w-0 flex justify-center px-2">
+<button class="w-full max-w-[440px] h-9 flex items-center gap-2 px-3 rounded-lg bg-[#f5f7fa] border border-[#e6eaf0] text-[13px] text-[#8a94a6] hover:border-[#1677ff] hover:bg-white" id="gsBtn">
+<iconify-icon class="text-[15px]" icon="lucide:search"></iconify-icon><span class="truncate">搜索教师、任务、数据源，或输入指令</span>
+<kbd class="ml-auto text-[11px] border border-[#e0e5ee] rounded px-1.5 py-0.5 bg-white">⌘K</kbd>
+</button>
+</div>
+<button class="tb-ico"><iconify-icon class="text-[17px]" icon="lucide:circle-help"></iconify-icon></button>
+<button class="tb-ico relative" id="bellBtn">
+<iconify-icon class="text-[17px]" icon="lucide:bell"></iconify-icon>
+<span class="absolute top-1 right-1 min-w-[15px] h-[15px] px-1 rounded-full bg-[#ff4d4f] text-white text-[10px] leading-[15px] text-center num" id="bellDot">3</span>
+</button>
+<div class="flex items-center gap-2 pl-3 border-l border-[#e6eaf0]">
+<span class="w-7 h-7 rounded-full bg-[#eaf2ff] text-[#1677ff] grid place-items-center text-[12px] font-semibold">李</span>
+<div class="hidden xl:block leading-tight"><div class="text-[12.5px]">李思远</div><div class="text-[11px] text-[#8a94a6]">平台管理员</div></div>
+<iconify-icon class="text-[12px] text-[#8a94a6]" icon="lucide:chevron-down"></iconify-icon>
+</div>
+</header>
+<div class="flex items-start">
+<aside class="w-[224px] shrink-0 bg-white border-r border-[#e6eaf0] h-[calc(100vh-56px)] sticky top-14 hidden md:flex flex-col">
+<div class="p-3 pb-1"><a class="btn btn-primary w-full" href="create.html"><iconify-icon class="text-[15px]" icon="lucide:plus"></iconify-icon>新建数据流水线</a></div>
+<nav class="flex-1 overflow-y-auto scroll-thin px-2 pb-3">
+<p class="nav-group">数据接入</p>
+<a class="nav-item" href="home.html"><iconify-icon icon="lucide:layout-dashboard"></iconify-icon>数据工厂总览</a>
+<a class="nav-item" href="sources.html"><iconify-icon icon="lucide:plug"></iconify-icon>数据源与连接器</a>
+<a class="nav-item" href="tasks.html"><iconify-icon icon="lucide:list-tree"></iconify-icon>采集任务管理<span class="ml-auto text-[11px] num px-1.5 rounded bg-[#fff7e6] text-[#c77c00]">3</span></a>
+<p class="nav-group">处理加工</p>
+<a class="nav-item" href="raw-data.html"><iconify-icon icon="lucide:folder-open"></iconify-icon>原始数据管理</a>
+<a class="nav-item" href="parsing.html"><iconify-icon icon="lucide:scan-text"></iconify-icon>多模态解析</a>
+<a class="nav-item" href="cleaning.html"><iconify-icon icon="lucide:filter"></iconify-icon>清洗与标准化</a>
+<p class="nav-group">知识治理</p>
+<a class="nav-item active" href="knowledge.html"><iconify-icon icon="lucide:share-2"></iconify-icon>实体与知识关联</a>
+<p class="nav-group">质量交付</p>
+<a class="nav-item" href="quality.html"><iconify-icon icon="lucide:shield-check"></iconify-icon>数据质量与审核<span class="ml-auto text-[11px] num px-1.5 rounded bg-[#fff1f0] text-[#d4380d]" data-badge="pendingReview">12</span></a>
+<a class="nav-item" href="assets.html"><iconify-icon icon="lucide:package-check"></iconify-icon>数据资产与交付</a>
+<p class="nav-group">系统</p>
+<a class="nav-item" href="system.html"><iconify-icon icon="lucide:settings"></iconify-icon>系统管理与监控</a>
+</nav>
+<div class="border-t border-[#e6eaf0] px-3 py-2.5 text-[11px] text-[#8a94a6] flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-[#52c41a]"></span>调度集群正常 · 4/4 在线</div>
+</aside>
+<main class="flex-1 min-w-0 p-4 lg:p-6">
+<div class="flex flex-wrap items-end justify-between gap-3 mb-4">
+<div>
+<nav class="flex items-center gap-1.5 text-[12px] text-[#8a94a6] mb-1.5">
+<span>工作空间</span><iconify-icon class="text-[11px]" icon="lucide:chevron-right"></iconify-icon>
+<span>知识治理</span><iconify-icon class="text-[11px]" icon="lucide:chevron-right"></iconify-icon>
+<span class="text-[#5c6570]">实体与知识关联</span>
+</nav>
+<h1 class="text-[20px] font-semibold leading-7">实体与知识关联</h1>
+<p class="text-[12px] text-[#8a94a6] mt-1">学者 / 机构 / 成果实体抽取、消歧审核与关系图谱构建</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="btn" onclick="toast('已导出图谱为 GraphML')"><iconify-icon class="text-[14px]" icon="lucide:download"></iconify-icon>导出图谱</button>
+<button class="btn" onclick="openRelDlg()"><iconify-icon class="text-[14px]" icon="lucide:git-pull-request-arrow"></iconify-icon>构建关系</button>
+<button class="btn btn-primary" onclick="location.href='quality.html#review'"><iconify-icon class="text-[15px]" icon="lucide:badge-check"></iconify-icon>提交质量审核</button>
+</div>
+</div>
+<div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+<div class="card p-4"><div class="text-[12px] text-[#5c6570]">实体总数</div><div class="mt-1.5 num text-[26px] leading-8 font-semibold">128,640</div><div class="text-[11.5px] text-[#8a94a6] mt-1">人物 24,180 · 机构 6,420</div></div>
+<div class="card p-4"><div class="text-[12px] text-[#5c6570]">关系总数</div><div class="mt-1.5 num text-[26px] leading-8 font-semibold">312,480</div><div class="text-[11.5px] text-[#8a94a6] mt-1">本周新增 8,240</div></div>
+<a class="card p-4 hover:border-[#ffe1a8]" href="#disambig"><div class="text-[12px] text-[#5c6570]">待消歧</div><div class="mt-1.5 num text-[26px] leading-8 font-semibold text-[#d4380d]">7</div><div class="text-[11.5px] text-[#c77c00] mt-1">同名 / 机构别名冲突</div></a>
+<div class="card p-4"><div class="text-[12px] text-[#5c6570]">对齐准确率</div><div class="mt-1.5 num text-[26px] leading-8 font-semibold text-[#3f9c12]">97.8<span class="text-[13px] font-normal text-[#8a94a6]">%</span></div><div class="text-[11.5px] text-[#8a94a6] mt-1">基于 1,200 条人工抽检</div></div>
+<div class="card p-4"><div class="text-[12px] text-[#5c6570]">图谱版本</div><div class="mt-1.5 num text-[26px] leading-8 font-semibold">v2.4</div><div class="text-[11.5px] text-[#8a94a6] mt-1">2026-11-08 13:06 构建</div></div>
+</div>
+<section class="card overflow-hidden mb-4">
+<div class="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b border-[#f0f2f6]">
+<div class="text-[13px] font-semibold mr-1">知识图谱</div>
+<span class="tag tag-blue">以「张明远」为中心</span>
+<div class="relative" style="width:180px">
+<iconify-icon class="absolute left-2.5 top-2 text-[13px] text-[#8a94a6]" icon="lucide:search"></iconify-icon>
+<input class="inp" id="gSearch" placeholder="节点搜索" style="height:28px;padding-left:26px;font-size:12px"/>
+</div>
+<div class="flex items-center gap-1">
+<button class="btn btn-sm" id="hop1" onclick="setHop(1)">1 度</button>
+<button class="btn btn-sm btn-primary" id="hop2" onclick="setHop(2)">2 度</button>
+</div>
+<!-- R70 dated：真实端点 POST /graph/paths/search 的 max_depth 硬上限=3（>3 运行时拒 422）；
+     本原型演示态仅内置 1/2 度切换，深度 3 经真实端点可用 -->
+<span class="text-[10.5px] text-[#8a94a6]" title="真实端点 max_depth 1–3；本页为演示交互">真实端点深度 1–3</span>
+<div class="flex items-center gap-3 text-[11px] text-[#5c6570] ml-2">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#1677ff]"></span>学者</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#13c2c2]"></span>机构</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#faad14]"></span>成果</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#722ed1]"></span>项目 / 专利</span>
+</div>
+<div class="ml-auto flex items-center gap-1">
+<button class="btn btn-sm" onclick="zoomG(-0.1)"><iconify-icon class="text-[12px]" icon="lucide:minus"></iconify-icon></button>
+<span class="text-[11.5px] num text-[#5c6570] w-[40px] text-center" id="gzText">100%</span>
+<button class="btn btn-sm" onclick="zoomG(0.1)"><iconify-icon class="text-[12px]" icon="lucide:plus"></iconify-icon></button>
+<button class="btn btn-sm" onclick="zoomG('reset')"><iconify-icon class="text-[12px]" icon="lucide:maximize"></iconify-icon>适配</button>
+</div>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_300px]">
+<div class="overflow-x-auto scroll-none relative" style="background-image:radial-gradient(#e9eef6 1px, transparent 1px);background-size:20px 20px;background-color:#fcfdff">
+<svg height="380" id="graph" style="transform-origin:center;display:block;margin:0 auto" viewbox="0 0 820 380" width="820">
+<defs>
+<marker id="ga" markerheight="5" markerwidth="5" orient="auto-start-reverse" refx="22" refy="5" viewbox="0 0 10 10">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="#cfd8e6"></path>
+</marker>
+</defs>
+<g id="edges"></g>
+<g id="nodes"></g>
+</svg>
+<div class="absolute bottom-2 left-3 text-[11px] text-[#8a94a6] flex items-center gap-3">
+<span>节点 <span class="num" id="gnCount">0</span></span>
+<span>关系 <span class="num" id="geCount">0</span></span>
+<span>拖拽可拖动节点，滚轮缩放</span>
+</div>
+</div>
+<div class="border-l border-[#f0f2f6] p-4" id="nodePanel">
+<div class="flex items-center gap-2">
+<span class="w-8 h-8 rounded-lg bg-[#eaf2ff] text-[#1677ff] grid place-items-center"><iconify-icon class="text-[15px]" icon="lucide:user-round"></iconify-icon></span>
+<div><div class="text-[13.5px] font-semibold" id="npName">张明远</div><div class="text-[11px] text-[#8a94a6]" id="npType">人物 · Scholar</div></div>
+</div>
+<div class="mt-3 rounded-lg border border-[#f0f2f6] divide-y divide-[#f5f7fa] text-[12px]" id="npProps">
+<div class="flex px-3 py-1.5"><span class="w-16 text-[#8a94a6]">职称</span><span>教授 / 博导</span></div>
+<div class="flex px-3 py-1.5"><span class="w-16 text-[#8a94a6]">机构</span><span>浙江大学</span></div>
+<div class="flex px-3 py-1.5"><span class="w-16 text-[#8a94a6]">ORCID</span><span class="num text-[11px]">0000-0002-1825-0097</span></div>
+<div class="flex px-3 py-1.5"><span class="w-16 text-[#8a94a6]">置信度</span><span class="text-[#3f9c12] num">0.96</span></div>
+</div>
+<div class="mt-3 text-[11.5px] text-[#8a94a6] mb-1.5">相邻实体</div>
+<div class="space-y-1 text-[12px]" id="npNeighbors"></div>
+<div class="mt-3 flex gap-2">
+<a class="btn btn-sm flex-1" href="assets.html?teacher=张明远">科研档案</a>
+<button class="btn btn-sm flex-1" onclick="openEntityDlg()">实体详情</button>
+</div>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-1 xl:grid-cols-[360px_minmax(0,1fr)] gap-4 mb-4">
+<section class="card overflow-hidden">
+<div class="px-4 py-2.5 border-b border-[#f0f2f6] flex items-center justify-between">
+<div class="flex items-center gap-2"><span class="text-[13px] font-semibold">待消歧队列</span><span class="tag tag-red"><span class="dot"></span><span id="pendingEnt">7</span></span></div>
+<span class="text-[11px] text-[#8a94a6]">按冲突度排序</span>
+</div>
+<div class="p-2 space-y-1.5 max-h-[430px] overflow-y-auto scroll-thin" id="entList"></div>
+</section>
+<section class="card p-4" id="disambig">
+<div class="flex flex-wrap items-start justify-between gap-2">
+<div>
+<div class="flex items-center gap-2"><h2 class="text-[14px] font-semibold" id="dTitle">消歧对比 · 张明远</h2><span class="tag tag-red" id="dType">同名冲突</span><span class="tag tag-gray">冲突度 <span id="dScore">0.88</span></span></div>
+<p class="text-[11.5px] text-[#8a94a6] mt-1" id="dDesc">同一姓名在 2 个院系下出现，且论文署名机构不一致</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="btn btn-sm" onclick="rejectMerge()">不是同一人</button>
+<button class="btn btn-sm" onclick="deferMerge()">稍后处理</button>
+<button class="btn btn-sm btn-primary" onclick="confirmMerge()">确认合并</button>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-2 items-stretch mt-3">
+<div class="diff-col left">
+<div class="flex items-center gap-2 mb-1"><span class="tag tag-orange">候选 A</span><span class="text-[12.5px] font-semibold">张明远</span></div>
+<div>院系：计算机科学与技术学院</div>
+<div>职称：教授 / 博导</div>
+<div class="num">ORCID：0000-0002-1825-0097</div>
+<div>研究方向：知识图谱、多模态检索</div>
+<div>成果数：42 篇论文 / 6 项目</div>
+<div class="text-[#8a94a6]">来源：CNKI、计算机学院成果库</div>
+</div>
+<div class="grid place-items-center px-1"><span class="w-7 h-7 rounded-full bg-[#eaf2ff] text-[#1677ff] grid place-items-center"><iconify-icon class="text-[14px]" icon="lucide:arrow-left-right"></iconify-icon></span></div>
+<div class="diff-col right">
+<div class="flex items-center gap-2 mb-1"><span class="tag tag-blue">候选 B</span><span class="text-[12.5px] font-semibold">张明远（Zhang Mingyuan）</span></div>
+<div>院系：数学科学学院</div>
+<div>职称：副教授</div>
+<div class="num">ORCID：— （缺失）</div>
+<div>研究方向：图论、组合优化</div>
+<div>成果数：18 篇论文 / 2 项目</div>
+<div class="text-[#8a94a6]">来源：研究生院学位论文库、教师主页</div>
+</div>
+</div>
+<div class="mt-3 rounded-lg border border-[#e3efff] bg-[#f7fbff] p-3 text-[12px] leading-5">
+<div class="flex items-center gap-1.5 font-medium text-[#1f2329]"><iconify-icon class="text-[#1677ff]" icon="lucide:sparkles"></iconify-icon>系统建议：不合并</div>
+<p class="text-[#5c6570] mt-1">两者研究方向差异显著（知识图谱 vs 图论组合优化），且论文合作者网络重叠率仅 4%。建议保留为独立实体，并为候选 B 补充 ORCID 后复核。</p>
+</div>
+<div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11.5px]">
+<div class="rounded-md border border-[#f0f2f6] px-2 py-1.5"><span class="text-[#8a94a6]">名称相似度</span><div class="num text-[12.5px] text-[#3f9c12]">1.00</div></div>
+<div class="rounded-md border border-[#f0f2f6] px-2 py-1.5"><span class="text-[#8a94a6]">机构相似度</span><div class="num text-[12.5px] text-[#c77c00]">0.42</div></div>
+<div class="rounded-md border border-[#f0f2f6] px-2 py-1.5"><span class="text-[#8a94a6]">合作者重叠</span><div class="num text-[12.5px] text-[#d4380d]">0.04</div></div>
+<div class="rounded-md border border-[#f0f2f6] px-2 py-1.5"><span class="text-[#8a94a6]">成果重叠</span><div class="num text-[12.5px] text-[#d4380d]">0.00</div></div>
+</div>
+</section>
+</div>
+<!-- R70·H04-04·2026-11-19 dated 新增：真实能力登记（后端实测面如实登记，非本页交互；
+     证据=evidence/workflow-2026-11-19-r86/r86_t7_run5.out 19/19 -->
+<section class="card mb-4">
+<div class="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b border-[#f0f2f6]">
+<h2 class="text-[13.5px] font-semibold">真实能力登记</h2>
+<span class="tag tag-green">后端已冻结+实测</span>
+<span class="text-[11px] text-[#8a94a6]">H04-04 实体消歧回滚与图谱多跳查询 · 2026-11-19</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 text-[12px] leading-5">
+<div class="rounded-lg border border-[#f0f2f6] p-3">
+<div class="flex items-center gap-1.5 font-medium text-[#1f2329] mb-1"><iconify-icon class="text-[#1677ff]" icon="lucide:git-pull-request-arrow"></iconify-icon>消歧决策三态与回滚</div>
+<p class="text-[#5c6570]">POST /entity-matches/{candidateId}/decisions 支持 MERGE / KEEP_SEPARATE / ESCALATE 三态；改判走<b>新行反向决策</b>（uq_effective_match_decision 单一生效约束），旧决策 UPDATE 被追加型触发器拒绝——回滚不留双生效行；并发冲突返回 409 VERSION_CONFLICT。</p>
+</div>
+<div class="rounded-lg border border-[#f0f2f6] p-3">
+<div class="flex items-center gap-1.5 font-medium text-[#1f2329] mb-1"><iconify-icon class="text-[#1677ff]" icon="lucide:fold-vertical"></iconify-icon>合并折叠查询</div>
+<p class="text-[#5c6570]">实体 MERGE 后 merged_into 链上全部事实在查询面折叠到存续实体（递归 fold CTE）——MERGED 实体名下的事实不丢失、不重复；路径查询与 Neo4j 投影两侧同构折叠语义。</p>
+</div>
+<div class="rounded-lg border border-[#f0f2f6] p-3">
+<div class="flex items-center gap-1.5 font-medium text-[#1f2329] mb-1"><iconify-icon class="text-[#1677ff]" icon="lucide:route"></iconify-icon>路径查询（多跳 1–3）</div>
+<p class="text-[#5c6570]">POST /graph/paths/search 已冻结并真实现：max_depth 取值 1–3，&gt;3 运行时拒绝（422）；仅统计 PUBLISHED 事实、自动防环、max_paths≤100 条数帽。多跳查询≠GraphRAG，不扩大建设。</p>
+</div>
+<div class="rounded-lg border border-[#f0f2f6] p-3">
+<div class="flex items-center gap-1.5 font-medium text-[#1f2329] mb-1"><iconify-icon class="text-[#1677ff]" icon="lucide:shield-x"></iconify-icon>CP-8 证据移除传播</div>
+<p class="text-[#5c6570]">RAW_DELETION 工单 APPROVE → 资产 EVIDENCE_REMOVED → 关联证据（直连+经解析段间接）FAILED → PUBLISHED 事实 RETRACTED，单事务传播且幂等可重入；CANDIDATE 事实无发布面、自然跳过。</p>
+</div>
+<div class="rounded-lg border border-[#f0f2f6] p-3">
+<div class="flex items-center gap-1.5 font-medium text-[#1f2329] mb-1"><iconify-icon class="text-[#1677ff]" icon="lucide:database-backup"></iconify-icon>Neo4j 投影演练（profile=graph）</div>
+<p class="text-[#5c6570]">PUBLISHED 折叠集经 Cypher MERGE 幂等投影（重复投影零重复节点/边）+收敛清理（RETRACTED 事实退出后投影同步退出）+CP-4 水位只进不退（回卷=告警不自动修）+PG/Neo4j 双侧 id 集合对账；演练容器 profile=graph 默认不启动（P0 可禁用）。</p>
+</div>
+<div class="rounded-lg border border-[#e3efff] bg-[#f7fbff] p-3">
+<div class="flex items-center gap-1.5 font-medium text-[#1f2329] mb-1"><iconify-icon class="text-[#c77c00]" icon="lucide:info"></iconify-icon>接入边界（如实注记）</div>
+<p class="text-[#5c6570]">本页上方「1 度/2 度」、合并按钮、关系面板均为<b>原型内演示交互</b>（USE_MOCK=true），非真实调用；本页 /kg/* 四路径为虚构面未冻结。真实能力以上述冻结端点为准（React 前端 frontend/src/api/knowledge.ts 已接线）。Neo4j 投影=演练态只读加速面，<b>非权威主数据</b>（PG 为唯一事实源；无跨库原子事务）；图谱可视化接真实数据需另立任务卡授权。</p>
+</div>
+</div>
+</section>
+<section class="card overflow-hidden">
+<div class="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b border-[#f0f2f6]">
+<h2 class="text-[13.5px] font-semibold">实体列表</h2>
+<div class="relative ml-2" style="width:200px">
+<iconify-icon class="absolute left-2.5 top-2 text-[13px] text-[#8a94a6]" icon="lucide:search"></iconify-icon>
+<input class="inp" id="entSearch" placeholder="实体名称 / ID" style="height:28px;padding-left:26px;font-size:12px"/>
+</div>
+<select class="inp" id="typeSel" style="width:120px;height:28px;font-size:12px"><option value="all">全部类型</option><option>人物</option><option>机构</option><option>成果</option><option>项目</option></select>
+<select class="inp" id="statusSel" style="width:130px;height:28px;font-size:12px"><option value="all">全部状态</option><option>已确认</option><option>待消歧</option><option>已合并</option></select>
+<span class="ml-auto text-[12px] text-[#8a94a6]">共 <span class="num text-[#5c6570]" id="entTotal">6</span> 条</span>
+</div>
+<div class="overflow-x-auto scroll-none">
+<table class="w-full border-collapse text-[12.5px]" style="min-width:900px">
+<thead>
+<tr class="bg-[#fafbfd] text-[11.5px] text-[#8a94a6]">
+<th class="text-left font-medium px-4 h-10 border-b border-[#e6eaf0]">实体</th>
+<th class="text-left font-medium px-3 h-10 border-b border-[#e6eaf0]" style="width:90px">类型</th>
+<th class="text-left font-medium px-3 h-10 border-b border-[#e6eaf0]" style="width:170px">所属机构 / 来源</th>
+<th class="text-left font-medium px-3 h-10 border-b border-[#e6eaf0]" style="width:110px">关系数</th>
+<th class="text-left font-medium px-3 h-10 border-b border-[#e6eaf0]" style="width:110px">置信度</th>
+<th class="text-left font-medium px-3 h-10 border-b border-[#e6eaf0]" style="width:100px">状态</th>
+<th class="text-left font-medium px-3 h-10 border-b border-[#e6eaf0]" style="width:130px">操作</th>
+</tr>
+</thead>
+<tbody id="entBody"></tbody>
+</table>
+</div>
+</section>
+</main>
+</div>
+<div class="mask" id="mask" onclick="closeDrawer(); closeDlg()"></div>
+<aside class="drawer" id="entityDrawer">
+<div class="flex items-center justify-between px-5 h-14 border-b border-[#e6eaf0]">
+<div><div class="text-[14px] font-semibold" id="edTitle">实体详情</div><div class="text-[11px] text-[#8a94a6] num" id="edId">ENT-8831</div></div>
+<button class="tb-ico" onclick="closeDrawer()"><iconify-icon class="text-[16px]" icon="lucide:x"></iconify-icon></button>
+</div>
+<div class="flex-1 overflow-y-auto scroll-thin p-5">
+<div class="rounded-lg bg-[#f8fbff] border border-[#e3efff] p-3 mb-4 text-[12px] leading-5 text-[#5c6570]">
+      实体由多模态抽取 + 学者词典对齐生成，置信度低于 0.9 的字段需人工复核后才会进入图谱主库。
+    </div>
+<h3 class="text-[13px] font-semibold mb-2">属性</h3>
+<div class="rounded-lg border border-[#f0f2f6] divide-y divide-[#f5f7fa] text-[12.5px] mb-4" id="edProps"></div>
+<h3 class="text-[13px] font-semibold mb-2">关系</h3>
+<div class="space-y-1.5 mb-4" id="edRels"></div>
+<h3 class="text-[13px] font-semibold mb-2">来源证据</h3>
+<div class="space-y-1.5 text-[12px] text-[#5c6570]">
+<a class="flex items-center gap-2 link" href="raw-data.html"><iconify-icon class="text-[13px]" icon="lucide:file-text"></iconify-icon>张明远-知识图谱综述.pdf<span class="ml-auto text-[11px] text-[#8a94a6] num">p.1</span></a>
+<a class="flex items-center gap-2 link" href="sources.html"><iconify-icon class="text-[13px]" icon="lucide:plug"></iconify-icon>CNKI 论文元数据<span class="ml-auto text-[11px] text-[#8a94a6] num">2026-11-08</span></a>
+<a class="flex items-center gap-2 link" href="parsing.html"><iconify-icon class="text-[13px]" icon="lucide:scan-text"></iconify-icon>解析结果 DOC-7721<span class="ml-auto text-[11px] text-[#8a94a6] num">conf 0.96</span></a>
+</div>
+</div>
+<div class="px-5 py-3 border-t border-[#e6eaf0] flex gap-2">
+<button class="btn btn-sm" onclick="toast('已标记为待复核')">标记待复核</button>
+<a class="btn btn-sm btn-primary ml-auto" href="assets.html?teacher=张明远">生成档案</a>
+</div>
+</aside>
+<div class="dlg" id="relDlg">
+<div class="flex items-center justify-between px-5 h-14 border-b border-[#e6eaf0]">
+<div><div class="text-[15px] font-semibold">构建关系</div><div class="text-[11.5px] text-[#8a94a6] mt-0.5">人工新增的关系将标记来源为「人工录入」并记录操作人</div></div>
+<button class="tb-ico" onclick="closeDlg()"><iconify-icon class="text-[16px]" icon="lucide:x"></iconify-icon></button>
+</div>
+<div class="p-5">
+<div class="grid grid-cols-[1fr_auto_1fr] gap-2 items-end mb-4">
+<div><label class="text-[12px] text-[#5c6570] block mb-1">起点实体</label><input class="inp" id="relFrom" value="张明远"/></div>
+<div class="pb-2 text-[#8a94a6]"><iconify-icon class="text-[16px]" icon="lucide:arrow-right"></iconify-icon></div>
+<div><label class="text-[12px] text-[#5c6570] block mb-1">终点实体</label><input class="inp" id="relTo" value="浙江大学"/></div>
+</div>
+<div class="mb-4"><label class="text-[12px] text-[#5c6570] block mb-1">关系类型</label>
+<select class="inp" id="relType"><option>任职于（employed_by）</option><option>发表（authored）</option><option>主持（principal_of）</option><option>合作（collaborated_with）</option><option>隶属（affiliated_with）</option></select>
+</div>
+<div class="grid grid-cols-2 gap-3 mb-4">
+<div><label class="text-[12px] text-[#5c6570] block mb-1">置信度</label><input class="inp num" id="relConf" value="0.95"/></div>
+<div><label class="text-[12px] text-[#5c6570] block mb-1">生效时间</label><input class="inp" value="2026-11-08"/></div>
+</div>
+<div><label class="text-[12px] text-[#5c6570] block mb-1">证据说明</label><textarea class="inp" id="relNote" style="height:70px;padding:8px 10px;resize:none">依据教师主页与人事系统记录确认任职关系。</textarea></div>
+<p class="hidden text-[12px] text-[#d4380d] mt-2" id="relErr">起点与终点实体不能相同</p>
+</div>
+<div class="px-5 py-3 border-t border-[#e6eaf0] flex justify-end gap-2">
+<button class="btn" onclick="closeDlg()">取消</button>
+<button class="btn btn-primary" onclick="saveRel()">保存关系</button>
+</div>
+</div>
+<div class="mask" id="searchMask" onclick="closeSearch()"></div>
+<div class="card" id="searchDlg" style="position:fixed;z-index:100;left:50%;top:16%;transform:translateX(-50%);width:640px;max-width:94vw;display:none;overflow:hidden;box-shadow:0 24px 64px rgba(15,23,42,.22)">
+<div class="flex items-center gap-2 px-4 h-12 border-b border-[#e6eaf0]">
+<iconify-icon class="text-[16px] text-[#8a94a6]" icon="lucide:search"></iconify-icon>
+<input autocomplete="off" class="flex-1 h-full text-[14px] outline-none bg-transparent" id="gsInput" placeholder="输入教师姓名直接发起数据流水线"/>
+<kbd class="text-[11px] border border-[#e0e5ee] rounded px-1.5 py-0.5 text-[#8a94a6]">ESC</kbd>
+</div>
+<div class="p-3"><p class="px-2 py-1 text-[11px] text-[#8a94a6]">教师 · 点击直接启动全流程</p><div class="space-y-1" id="gsTeachers"></div></div>
+</div>
+<div class="toast" id="toast"><iconify-icon class="text-[15px] text-[#73d13d]" icon="lucide:check-circle-2"></iconify-icon><span id="toastText">操作成功</span></div>
+<script>
+/* ================= MOCK（MOCK） ================= */
+const MOCK_TEACHERS = [
+  { name: '张明远', title: '教授', dept: '计算机科学与技术学院', uni: '浙江大学' },
+  { name: '陈立群', title: '副教授', dept: '材料科学与工程学院', uni: '浙江大学' },
+  { name: '王慧敏', title: '教授', dept: '医学院', uni: '上海交通大学' },
+  { name: '刘志强', title: '副教授', dept: '经济学院', uni: '复旦大学' }
+];
+const ENTITIES = [
+  { id: 'ENT-8831', name: '张明远', type: '人物', org: '浙江大学 · 计算机学院', rels: 36, conf: 0.96, status: '已确认' },
+  { id: 'ENT-8832', name: '张明远（数学学院）', type: '人物', org: '浙江大学 · 数学学院', rels: 8, conf: 0.62, status: '待消歧' },
+  { id: 'ENT-8833', name: '浙江大学', type: '机构', org: '机构主数据', rels: 1240, conf: 0.99, status: '已确认' },
+  { id: 'ENT-8834', name: 'Knowledge Graph Enhanced Retrieval…', type: '成果', org: 'CNKI · TKDE 2025', rels: 12, conf: 0.94, status: '已确认' },
+  { id: 'ENT-8835', name: '国家自然科学基金 62272318', type: '项目', org: '科研院项目库', rels: 6, conf: 0.97, status: '已确认' },
+  { id: 'ENT-8836', name: '浙大计算机学院', type: '机构', org: '院系别名', rels: 84, conf: 0.71, status: '待消歧' }
+];
+const GRAPH = {
+  nodes: [
+    { id: 'n0', label: '张明远', sub: '教授', type: 'person', x: 420, y: 190, r: 34 },
+    { id: 'n1', label: '浙江大学', sub: '机构', type: 'org', x: 420, y: 60, r: 27 },
+    { id: 'n2', label: '计算机学院', sub: '院系', type: 'org', x: 250, y: 88, r: 23 },
+    { id: 'n3', label: '知识图谱综述', sub: '论文 2025', type: 'work', x: 600, y: 108, r: 25 },
+    { id: 'n4', label: '多模态对齐框架', sub: '论文 2024', type: 'work', x: 640, y: 268, r: 23 },
+    { id: 'n5', label: '国家自然科学基金', sub: '项目 62272318', type: 'project', x: 420, y: 330, r: 25 },
+    { id: 'n6', label: '陈立群', sub: '合作者', type: 'person', x: 210, y: 265, r: 22 },
+    { id: 'n7', label: '国家发明专利', sub: 'ZL2024 1 0233', type: 'project', x: 190, y: 178, r: 21 },
+    { id: 'n8', label: '李思', sub: '博士生', type: 'person', x: 566, y: 336, r: 20 }
+  ],
+  edges: [
+    { from: 'n0', to: 'n1', label: '任职于' },
+    { from: 'n0', to: 'n2', label: '隶属' },
+    { from: 'n0', to: 'n3', label: '第一作者' },
+    { from: 'n0', to: 'n4', label: '通讯作者' },
+    { from: 'n0', to: 'n5', label: '主持' },
+    { from: 'n0', to: 'n6', label: '合作' },
+    { from: 'n0', to: 'n7', label: '发明人' },
+    { from: 'n8', to: 'n4', label: '参与' },
+    { from: 'n2', to: 'n1', label: '隶属于' },
+    { from: 'n6', to: 'n2', label: '隶属' }
+  ]
+};
+const TYPE_COLOR = { person: '#1677ff', org: '#13c2c2', work: '#faad14', project: '#722ed1' };
+const TYPE_ICON = { person: 'lucide:user-round', org: 'lucide:building-2', work: 'lucide:file-text', project: 'lucide:folder-kanban' };
+
+/* ============ API 层（USE_MOCK 开关；R70·H04-04·2026-11-19 dated 注记） ============ */
+/* 接入边界如实登记：下方 Api 对象的 /kg/entities、/kg/entities/{id}/subgraph、
+   /kg/entities/merge、/kg/relations 四路径为本原型虚构面——未冻结、未实现，
+   不得当作真实端点引用。知识图谱域真实冻结端点（openapi.yaml 钉版 5f3eb9486c69）：
+     · GET  /api/v1/entities                             实体分页列表
+     · GET  /api/v1/entity-matches                       消歧候选分页
+     · POST /api/v1/entity-matches/{candidateId}/decisions  决策三态 MERGE / KEEP_SEPARATE / ESCALATE
+                                                          （回滚=提交新行反向决策；旧决策 UPDATE 被触发器拒）
+     · POST /api/v1/graph/paths/search                   路径查询（requestBody：subject_entity_id+
+                                                          predicate 必填；max_depth 1–3 硬上限、max_paths≤100）
+     · POST /api/v1/reviews/{ticketId}/decisions         工单决策（RAW_DELETION APPROVE→CP-8 证据移除传播挂点）
+   React 前端已接真实冻结面（frontend/src/api/knowledge.ts）；本页维持 USE_MOCK
+   原型演示态（下方按钮为页面内演示交互，非真实调用）。 */
+const USE_MOCK = true;
+const API_BASE = '/api/v1'; // TODO: 接入真实知识图谱服务
+async function request(path, options) {
+  const opt = options || {};
+  if (USE_MOCK) return new Promise(function (r) { setTimeout(function () { r({ code: 0, data: ENTITIES }); }, 160); });
+  const res = await fetch(API_BASE + path, { method: opt.method || 'GET', headers: { 'Content-Type': 'application/json' }, body: opt.body ? JSON.stringify(opt.body) : undefined });
+  if (!res.ok) throw new Error('接口异常：' + res.status);
+  return res.json();
+}
+const Api = {
+  listEntities: function (params) { return request('/kg/entities', { params: params }); },            // 原型虚构面（真实面=GET /entities）
+  getSubgraph: function (id, hops) { return request('/kg/entities/' + id + '/subgraph', { params: { hops: hops } }); }, // 原型虚构面（真实面=POST /graph/paths/search）
+  mergeEntities: function (body) { return request('/kg/entities/merge', { method: 'POST', body: body }); },              // 原型虚构面（真实面=POST /entity-matches/{id}/decisions）
+  createRelation: function (body) { return request('/kg/relations', { method: 'POST', body: body }); }                   // 原型虚构面（事实发布走采集→发布链，无直连建边端点）
+};
+
+/* ================= 通用 ================= */
+const DF_KEY = 'df_state_v1';
+function dfState() {
+  try { return Object.assign({ pendingReview: 12, notifications: 3 }, JSON.parse(localStorage.getItem(DF_KEY) || '{}')); }
+  catch (e) { return { pendingReview: 12, notifications: 3 }; }
+}
+function dfSave(patch) { const s = Object.assign(dfState(), patch); localStorage.setItem(DF_KEY, JSON.stringify(s)); return s; }
+function setBadges() {
+  const s = dfState();
+  document.querySelectorAll('[data-badge="pendingReview"]').forEach(function (el) { el.textContent = s.pendingReview; });
+  const dot = document.getElementById('bellDot'); if (dot) dot.textContent = s.notifications;
+}
+function toast(msg) {
+  const el = document.getElementById('toast');
+  document.getElementById('toastText').textContent = msg;
+  el.classList.add('show');
+  clearTimeout(window.__tt);
+  window.__tt = setTimeout(function () { el.classList.remove('show'); }, 2400);
+}
+
+/* ================= 图谱渲染（原生 SVG） ================= */
+let hop = 2;
+let gScale = 1;
+let selectedNode = 'n0';
+const nodeEls = {};
+
+function renderGraph() {
+  const edgesG = document.getElementById('edges');
+  const nodesG = document.getElementById('nodes');
+  edgesG.innerHTML = '';
+  nodesG.innerHTML = '';
+  const nodes = hop === 1 ? GRAPH.nodes.filter(function (n) { return n.id === 'n0' || GRAPH.edges.some(function (e) { return (e.from === 'n0' && e.to === n.id) || (e.to === 'n0' && e.from === n.id); }); }) : GRAPH.nodes;
+  const ids = nodes.map(function (n) { return n.id; });
+  const edges = GRAPH.edges.filter(function (e) { return ids.indexOf(e.from) >= 0 && ids.indexOf(e.to) >= 0; });
+
+  edges.forEach(function (e) {
+    const a = nodes.filter(function (n) { return n.id === e.from; })[0];
+    const b = nodes.filter(function (n) { return n.id === e.to; })[0];
+    if (!a || !b) return;
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const len = Math.sqrt(dx * dx + dy * dy) || 1;
+    const ax = a.x + dx / len * (a.r + 3), ay = a.y + dy / len * (a.r + 3);
+    const bx = b.x - dx / len * (b.r + 6), by = b.y - dy / len * (b.r + 6);
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', ax); line.setAttribute('y1', ay);
+    line.setAttribute('x2', bx); line.setAttribute('y2', by);
+    line.setAttribute('stroke', '#cfd8e6');
+    line.setAttribute('stroke-width', '1.2');
+    line.setAttribute('marker-end', 'url(#ga)');
+    line.setAttribute('class', 'gedge');
+    edgesG.appendChild(line);
+
+    const midX = (ax + bx) / 2, midY = (ay + by) / 2;
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('x', midX); t.setAttribute('y', midY - 4);
+    t.setAttribute('text-anchor', 'middle');
+    t.setAttribute('font-size', '9.5');
+    t.setAttribute('fill', '#8a94a6');
+    t.textContent = e.label;
+    edgesG.appendChild(t);
+  });
+
+  nodes.forEach(function (n) {
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('class', 'gnode');
+    g.setAttribute('transform', 'translate(' + n.x + ',' + n.y + ')');
+    g.dataset.id = n.id;
+    const halo = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    halo.setAttribute('r', n.r + 5);
+    halo.setAttribute('fill', TYPE_COLOR[n.type]);
+    halo.setAttribute('opacity', n.id === selectedNode ? '0.16' : '0');
+    g.appendChild(halo);
+    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    c.setAttribute('r', n.r);
+    c.setAttribute('fill', n.id === selectedNode ? TYPE_COLOR[n.type] : '#fff');
+    c.setAttribute('stroke', TYPE_COLOR[n.type]);
+    c.setAttribute('stroke-width', n.id === selectedNode ? '0' : '1.6');
+    g.appendChild(c);
+    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    label.setAttribute('text-anchor', 'middle');
+    label.setAttribute('y', '3');
+    label.setAttribute('font-size', n.label.length > 8 ? '8.5' : '10.5');
+    label.setAttribute('font-weight', '600');
+    label.setAttribute('fill', n.id === selectedNode ? '#fff' : TYPE_COLOR[n.type]);
+    label.textContent = n.label.length > 9 ? n.label.slice(0, 8) + '…' : n.label;
+    g.appendChild(label);
+    const sub = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    sub.setAttribute('text-anchor', 'middle');
+    sub.setAttribute('y', String(n.r + 13));
+    sub.setAttribute('font-size', '9');
+    sub.setAttribute('fill', '#8a94a6');
+    sub.textContent = n.sub;
+    g.appendChild(sub);
+    g.addEventListener('click', function () { selectGraphNode(n); });
+    nodesG.appendChild(g);
+    nodeEls[n.id] = g;
+  });
+  document.getElementById('gnCount').textContent = nodes.length;
+  document.getElementById('geCount').textContent = edges.length;
+}
+function selectGraphNode(n) {
+  selectedNode = n.id;
+  renderGraph();
+  document.getElementById('npName').textContent = n.label;
+  document.getElementById('npType').textContent = (n.type === 'person' ? '人物' : n.type === 'org' ? '机构' : n.type === 'work' ? '成果' : '项目') + ' · ' + n.id.toUpperCase();
+  const neighbors = GRAPH.edges.filter(function (e) { return e.from === n.id || e.to === n.id; });
+  const box = document.getElementById('npNeighbors');
+  box.innerHTML = '';
+  neighbors.forEach(function (e) {
+    const otherId = e.from === n.id ? e.to : e.from;
+    const other = GRAPH.nodes.filter(function (x) { return x.id === otherId; })[0];
+    if (!other) return;
+    const row = document.createElement('button');
+    row.className = 'w-full flex items-center gap-2 px-2 py-1.5 rounded-md border border-[#f0f2f6] hover:border-[#91caff] hover:bg-[#f8fbff] text-left';
+    row.onclick = function () { selectGraphNode(other); };
+    row.innerHTML = '<span class="w-1.5 h-1.5 rounded-full" style="background:' + TYPE_COLOR[other.type] + '"></span><span class="truncate">' + other.label + '</span><span class="ml-auto text-[10.5px] text-[#8a94a6]">' + e.label + '</span>';
+    box.appendChild(row);
+  });
+  document.getElementById('npProps').innerHTML =
+    '<div class="flex px-3 py-1.5"><span class="w-16 text-[#8a94a6]">类型</span><span>' + (n.type === 'person' ? '人物（Scholar）' : n.type === 'org' ? '机构（Organization）' : n.type === 'work' ? '成果（Publication）' : '项目 / 专利') + '</span></div>' +
+    '<div class="flex px-3 py-1.5"><span class="w-16 text-[#8a94a6]">关联数</span><span class="num">' + neighbors.length + ' 条关系</span></div>' +
+    '<div class="flex px-3 py-1.5"><span class="w-16 text-[#8a94a6]">来源</span><span>多模态抽取 + 词典对齐</span></div>' +
+    '<div class="flex px-3 py-1.5"><span class="w-16 text-[#8a94a6]">置信度</span><span class="text-[#3f9c12] num">0.9' + (n.id === 'n0' ? '6' : '4') + '</span></div>';
+}
+function setHop(h) {
+  hop = h;
+  document.getElementById('hop1').classList.toggle('btn-primary', h === 1);
+  document.getElementById('hop2').classList.toggle('btn-primary', h === 2);
+  renderGraph();
+  toast('已切换为 ' + h + ' 度邻居视图');
+}
+function zoomG(v) {
+  gScale = v === 'reset' ? 1 : Math.min(1.4, Math.max(0.7, Math.round((gScale + v) * 10) / 10));
+  document.getElementById('graph').style.transform = 'scale(' + gScale + ')';
+  document.getElementById('gzText').textContent = Math.round(gScale * 100) + '%';
+}
+document.getElementById('gSearch').addEventListener('input', function (e) {
+  const kw = e.target.value.trim();
+  if (!kw) { renderGraph(); return; }
+  const hit = GRAPH.nodes.filter(function (n) { return n.label.indexOf(kw) >= 0; });
+  if (hit.length) selectGraphNode(hit[0]);
+});
+
+/* ================= 消歧队列 ================= */
+let activeConflict = 'ENT-8832';
+function renderEntities() {
+  const box = document.getElementById('entList');
+  box.innerHTML = '';
+  const list = ENTITIES.filter(function (e) { return e.status === '待消歧'; });
+  document.getElementById('pendingEnt').textContent = list.length;
+  list.forEach(function (e) {
+    const b = document.createElement('button');
+    b.className = 'ent' + (e.id === activeConflict ? ' on' : '');
+    b.innerHTML = '<div class="flex items-center gap-2"><span class="tag tag-orange" style="height:19px">同名冲突</span><span class="text-[12.5px] font-medium truncate">' + e.name + '</span></div>' +
+      '<div class="text-[11px] text-[#8a94a6] mt-1">' + e.org + '</div>' +
+      '<div class="flex items-center gap-2 mt-1"><span class="text-[11px] text-[#8a94a6]">置信度</span><span class="num text-[11px] text-[#c77c00]">' + e.conf.toFixed(2) + '</span><span class="ml-auto tag tag-blue" style="height:19px">去对比</span></div>';
+    b.onclick = function () {
+      activeConflict = e.id;
+      document.querySelectorAll('#entList .ent').forEach(function (x) { x.classList.remove('on'); });
+      b.classList.add('on');
+      selectConflict(e);
+      document.getElementById('disambig').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+    box.appendChild(b);
+  });
+  if (!list.length) box.innerHTML = '<div class="text-center text-[12px] text-[#8a94a6] py-8">消歧队列已清空</div>';
+}
+function selectConflict(e) {
+  document.getElementById('dTitle').textContent = '消歧对比 · ' + e.name.replace('（数学学院）', '');
+  document.getElementById('dType').textContent = e.type === '机构' ? '别名冲突' : '同名冲突';
+  document.getElementById('dScore').textContent = (1 - e.conf).toFixed(2);
+  document.getElementById('dDesc').textContent = e.type === '机构'
+    ? '「浙大计算机学院」为「浙江大学 · 计算机科学与技术学院」的常见别名，需确认是否合并为同一机构实体'
+    : '同一姓名在 2 个院系下出现，且论文署名机构不一致';
+  toast('已载入对比：' + e.name);
+}
+function confirmMerge() {
+  const target = ENTITIES.filter(function (e) { return e.id === activeConflict; })[0];
+  if (target) target.status = '已合并';
+  activeConflict = '';
+  renderEntities();
+  renderEntityTable();
+  const nxt = ENTITIES.filter(function (e) { return e.status === '待消歧'; })[0];
+  if (nxt) { activeConflict = nxt.id; renderEntities(); selectConflict(nxt); }
+  dfSave({ pendingReview: dfState().pendingReview + 1 });
+  setBadges();
+  toast('已合并实体，并生成质量复核工单');
+}
+function rejectMerge() {
+  const target = ENTITIES.filter(function (e) { return e.id === activeConflict; })[0];
+  if (target) target.status = '已确认';
+  activeConflict = '';
+  renderEntities();
+  renderEntityTable();
+  const nxt = ENTITIES.filter(function (e) { return e.status === '待消歧'; })[0];
+  if (nxt) { activeConflict = nxt.id; renderEntities(); selectConflict(nxt); }
+  toast('已确认两者为不同实体，保留为独立节点');
+}
+function deferMerge() { toast('已标记稍后处理，将在 24 小时后提醒'); }
+
+/* ================= 实体表 ================= */
+function renderEntityTable() {
+  const kw = document.getElementById('entSearch').value.trim();
+  const type = document.getElementById('typeSel').value;
+  const status = document.getElementById('statusSel').value;
+  const list = ENTITIES.filter(function (e) {
+    return (!kw || e.name.indexOf(kw) >= 0 || e.id.indexOf(kw) >= 0) && (type === 'all' || e.type === type) && (status === 'all' || e.status === status);
+  });
+  const tbody = document.getElementById('entBody');
+  tbody.innerHTML = '';
+  list.forEach(function (e) {
+    const tr = document.createElement('tr');
+    tr.className = 'border-b border-[#f0f2f6] hover:bg-[#f8fbff]';
+    const color = e.type === '人物' ? '#1677ff' : e.type === '机构' ? '#13c2c2' : e.type === '成果' ? '#faad14' : '#722ed1';
+    tr.innerHTML = '<td class="px-4 h-12"><div class="flex items-center gap-2"><span class="w-6 h-6 rounded-md grid place-items-center" style="background:' + color + '1a;color:' + color + '"><iconify-icon icon="' + (e.type === '人物' ? 'lucide:user-round' : e.type === '机构' ? 'lucide:building-2' : e.type === '成果' ? 'lucide:file-text' : 'lucide:folder-kanban') + '" class="text-[13px]"></iconify-icon></span>' +
+      '<div><div class="text-[12.5px] font-medium">' + e.name + '</div><div class="text-[10.5px] text-[#8a94a6] num">' + e.id + '</div></div></div></td>' +
+      '<td class="px-3"><span class="tag tag-gray">' + e.type + '</span></td>' +
+      '<td class="px-3 text-[12px] text-[#5c6570]">' + e.org + '</td>' +
+      '<td class="px-3 num text-[12px]">' + e.rels + '</td>' +
+      '<td class="px-3"><div class="flex items-center gap-1.5"><div class="w-12 h-1.5 rounded bg-[#f0f2f6] overflow-hidden"><span class="block h-full rounded" style="width:' + (e.conf * 100) + '%;background:' + (e.conf >= 0.9 ? '#52c41a' : e.conf >= 0.75 ? '#faad14' : '#ff4d4f') + '"></span></div><span class="num text-[11.5px]">' + e.conf.toFixed(2) + '</span></div></td>' +
+      '<td class="px-3"><span class="tag ' + (e.status === '已确认' ? 'tag-green' : e.status === '待消歧' ? 'tag-orange' : 'tag-blue') + '"><span class="dot"></span>' + e.status + '</span></td>' +
+      '<td class="px-3"><button class="text-[12px] link" data-ent="' + e.id + '">详情</button><span class="text-[#e6eaf0] mx-1.5">|</span><button class="text-[12px] link" data-focus="' + e.name + '">图谱定位</button></td>';
+    tbody.appendChild(tr);
+  });
+  if (!list.length) tbody.innerHTML = '<tr><td colspan="7" class="text-center text-[#8a94a6] py-10">没有符合条件的实体</td></tr>';
+  document.getElementById('entTotal').textContent = list.length;
+  tbody.querySelectorAll('[data-ent]').forEach(function (b) {
+    b.onclick = function () { openEntityDrawer(b.getAttribute('data-ent')); };
+  });
+  tbody.querySelectorAll('[data-focus]').forEach(function (b) {
+    b.onclick = function () {
+      const kw = b.getAttribute('data-focus');
+      const hit = GRAPH.nodes.filter(function (n) { return n.label.indexOf(kw) >= 0; })[0];
+      if (hit) selectGraphNode(hit);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      toast('已在图谱中定位：' + kw);
+    };
+  });
+}
+document.getElementById('entSearch').addEventListener('input', renderEntityTable);
+document.getElementById('typeSel').addEventListener('change', renderEntityTable);
+document.getElementById('statusSel').addEventListener('change', renderEntityTable);
+
+/* ================= 抽屉 / 弹窗 ================= */
+function openEntityDrawer(id) {
+  const e = ENTITIES.filter(function (x) { return x.id === id; })[0];
+  if (!e) return;
+  document.getElementById('edTitle').textContent = e.name;
+  document.getElementById('edId').textContent = e.id + ' · ' + e.type;
+  document.getElementById('edProps').innerHTML =
+    '<div class="flex px-3 py-2"><span class="w-20 text-[#8a94a6]">所属机构</span><span>' + e.org + '</span></div>' +
+    '<div class="flex px-3 py-2"><span class="w-20 text-[#8a94a6]">关系数量</span><span class="num">' + e.rels + '</span></div>' +
+    '<div class="flex px-3 py-2"><span class="w-20 text-[#8a94a6]">置信度</span><span class="num ' + (e.conf >= 0.9 ? 'text-[#3f9c12]' : 'text-[#c77c00]') + '">' + e.conf.toFixed(2) + '</span></div>' +
+    '<div class="flex px-3 py-2"><span class="w-20 text-[#8a94a6]">状态</span><span>' + e.status + '</span></div>';
+  document.getElementById('edRels').innerHTML = ['任职于 → 浙江大学', '隶属 → 计算机学院', '主持 → 国家自然科学基金 62272318'].map(function (r) {
+    return '<div class="flex items-center gap-2 px-2.5 py-1.5 rounded-md border border-[#f0f2f6] text-[12px]"><iconify-icon icon="lucide:git-branch" class="text-[#8a94a6] text-[13px]"></iconify-icon>' + r + '</div>';
+  }).join('');
+  document.getElementById('mask').classList.add('open');
+  document.getElementById('entityDrawer').classList.add('open');
+}
+function openEntityDlg() { openEntityDrawer('ENT-8831'); }
+function closeDrawer() {
+  document.getElementById('entityDrawer').classList.remove('open');
+  if (!document.getElementById('relDlg').classList.contains('open')) document.getElementById('mask').classList.remove('open');
+}
+function openRelDlg() {
+  document.getElementById('entityDrawer').classList.remove('open');
+  document.getElementById('mask').classList.add('open');
+  document.getElementById('relDlg').classList.add('open');
+  document.getElementById('relErr').classList.add('hidden');
+}
+function closeDlg() {
+  document.getElementById('relDlg').classList.remove('open');
+  if (!document.getElementById('entityDrawer').classList.contains('open')) document.getElementById('mask').classList.remove('open');
+}
+function saveRel() {
+  const from = document.getElementById('relFrom').value.trim();
+  const to = document.getElementById('relTo').value.trim();
+  const type = document.getElementById('relType').value;
+  if (!from || !to || from === to) {
+    document.getElementById('relErr').classList.remove('hidden');
+    return;
+  }
+  const a = GRAPH.nodes.filter(function (n) { return n.label === from; })[0] || GRAPH.nodes[0];
+  const b = GRAPH.nodes.filter(function (n) { return n.label === to; })[0] || GRAPH.nodes[1];
+  if (!GRAPH.edges.some(function (e) { return e.from === a.id && e.to === b.id && e.label === type.split('（')[0]; })) {
+    GRAPH.edges.push({ from: a.id, to: b.id, label: type.split('（')[0] });
+  }
+  closeDlg();
+  renderGraph();
+  toast('关系已创建：' + from + ' —' + type.split('（')[0] + '→ ' + to);
+}
+
+/* ================= 搜索 ================= */
+function openSearch() {
+  document.getElementById('searchMask').classList.add('open');
+  const d = document.getElementById('searchDlg'); d.style.display = 'block';
+  const input = document.getElementById('gsInput'); input.value = ''; renderTeachers('');
+  setTimeout(function () { input.focus(); }, 30);
+}
+function closeSearch() {
+  document.getElementById('searchMask').classList.remove('open');
+  document.getElementById('searchDlg').style.display = 'none';
+}
+function renderTeachers(kw) {
+  const box = document.getElementById('gsTeachers');
+  const list = MOCK_TEACHERS.filter(function (t) { return !kw || t.name.indexOf(kw) >= 0 || t.dept.indexOf(kw) >= 0; });
+  box.innerHTML = '';
+  list.forEach(function (t) {
+    const b = document.createElement('button');
+    b.className = 'w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-[#f2f7ff] text-left';
+    b.onclick = function () { launchTeacher(t.name); };
+    b.innerHTML = '<span class="w-8 h-8 rounded-lg bg-[#eaf2ff] text-[#1677ff] grid place-items-center text-[12px] font-semibold">' + t.name.slice(0, 1) + '</span>' +
+      '<span><span class="block text-[13px] font-medium">' + t.name + ' · ' + t.title + '</span><span class="block text-[11.5px] text-[#8a94a6]">' + t.uni + ' · ' + t.dept + '</span></span>' +
+      '<span class="ml-auto tag tag-blue">启动流水线</span>';
+    box.appendChild(b);
+  });
+  if (!list.length) box.innerHTML = '<div class="px-2 py-6 text-center text-[12px] text-[#8a94a6]">未找到匹配教师</div>';
+}
+function launchTeacher(name) {
+  const s = Object.assign(dfState(), { lastRun: { id: 'DF-RUN-20261108-014', teacher: name, status: 'running', progress: 0, startedAt: '2026-11-08 13:20' } });
+  localStorage.setItem(DF_KEY, JSON.stringify(s));
+  location.href = 'run.html?teacher=' + encodeURIComponent(name) + '&auto=1';
+}
+document.getElementById('gsBtn').addEventListener('click', openSearch);
+document.getElementById('gsInput').addEventListener('input', function (e) { renderTeachers(e.target.value.trim()); });
+document.getElementById('gsInput').addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.value.trim()) launchTeacher(e.target.value.trim()); });
+document.addEventListener('keydown', function (e) {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openSearch(); }
+  if (e.key === 'Escape') { closeSearch(); closeDrawer(); closeDlg(); }
+});
+document.getElementById('bellBtn').addEventListener('click', function () { toast('3 条未读通知：解析超时 / 数据源中断 / 低置信度待审'); });
+
+setBadges();
+renderGraph();
+selectGraphNode(GRAPH.nodes[0]);
+renderEntities();
+renderEntityTable();
+</script>
+</body>
+</html>

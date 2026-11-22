@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MMDP · 多模态数据工厂 — 个人数据工程作品</title>
+<meta name="description" content="MMDP 多模态数据工厂：12 页产品、冻结契约驱动、Temporal 编排、跨存储一致性、幂等与故障注入验证的数据平台工程作品。胡惠敏出品。">
+<style>
+:root{
+  --bg:#0b1020; --bg2:#0f162e; --card:#141d38; --card2:#182348;
+  --line:#24325e; --tx:#e8edf8; --tx2:#9db0d4; --tx3:#6a7ea8;
+  --acc:#5b9dff; --acc2:#7ee0c3; --gold:#ffd479; --rose:#ff8fa3;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--tx);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Segoe UI",sans-serif;
+  line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+section{padding:72px 0;border-top:1px solid var(--line)}
+h2{font-size:26px;letter-spacing:.5px;margin-bottom:8px}
+.sub{color:var(--tx2);font-size:14.5px;margin-bottom:34px;max-width:760px}
+.kicker{font-family:var(--mono);font-size:12px;color:var(--acc);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+a{color:var(--acc);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ---------- hero ---------- */
+.hero{border-top:none;padding:88px 0 64px;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;
+  background:radial-gradient(900px 420px at 78% -10%,rgba(91,157,255,.16),transparent 60%),
+             radial-gradient(600px 380px at 8% 110%,rgba(126,224,195,.09),transparent 60%);pointer-events:none}
+.hero .tag{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;
+  color:var(--acc2);border:1px solid #1f4a41;background:#0e1f1b;border-radius:999px;padding:5px 14px;margin-bottom:22px}
+.hero .tag i{width:7px;height:7px;border-radius:50%;background:var(--acc2);display:inline-block}
+.hero h1{font-size:clamp(34px,5.4vw,54px);line-height:1.18;letter-spacing:1px;font-weight:800}
+.hero h1 em{font-style:normal;color:var(--acc)}
+.hero .lede{margin-top:18px;font-size:17px;color:var(--tx2);max-width:780px}
+.hero .lede b{color:var(--tx);font-weight:600}
+.hero .cta{margin-top:30px;display:flex;gap:14px;flex-wrap:wrap}
+.btn{display:inline-block;padding:11px 22px;border-radius:10px;font-size:14.5px;border:1px solid var(--line)}
+.btn.main{background:var(--acc);color:#06122b;font-weight:700;border-color:var(--acc)}
+.btn.ghost{color:var(--tx2)}
+.btn:hover{text-decoration:none;filter:brightness(1.08)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:44px}
+.stat{background:var(--bg2);padding:18px 20px}
+.stat b{display:block;font-size:26px;font-weight:800;color:var(--tx);font-family:var(--mono)}
+.stat b i{font-style:normal;color:var(--acc);font-size:15px;margin-left:2px}
+.stat span{font-size:12.5px;color:var(--tx3)}
+
+/* ---------- architecture ---------- */
+.arch{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:26px 20px;overflow-x:auto}
+.arch svg{display:block;min-width:760px;width:100%;height:auto}
+.legend{display:flex;gap:22px;flex-wrap:wrap;margin-top:16px;font-size:12.5px;color:var(--tx3)}
+.legend s{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;text-decoration:none;vertical-align:-1px}
+
+/* ---------- highlights ---------- */
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px}
+.card h3{font-size:15.5px;margin-bottom:8px;color:var(--tx)}
+.card h3 b{color:var(--acc);font-family:var(--mono);font-size:12px;display:block;margin-bottom:6px;letter-spacing:1.5px}
+.card p{font-size:13.5px;color:var(--tx2)}
+.card p code{font-family:var(--mono);font-size:12px;color:var(--acc2);background:#0e1f1b;padding:1px 6px;border-radius:5px}
+
+/* ---------- gallery ---------- */
+.gal{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.shot{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:transform .18s ease,border-color .18s ease}
+.shot:hover{transform:translateY(-3px);border-color:#38508f}
+.shot img{width:100%;display:block;aspect-ratio:16/10;object-fit:cover;object-position:top;background:#0a0f22}
+.shot .cap{padding:13px 16px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.shot .cap b{font-size:14px;font-weight:650}
+.shot .cap span{font-family:var(--mono);font-size:11px;color:var(--tx3)}
+.pill{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 9px;border-radius:999px;margin-left:8px;vertical-align:1px}
+.pill.g{color:var(--acc2);background:#0e211c;border:1px solid #1f4a41}
+.pill.y{color:var(--gold);background:#221c0e;border:1px solid #4f4322}
+
+/* ---------- compare ---------- */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cmp figure{margin:0}
+.cmp img{width:100%;border-radius:12px;border:1px solid var(--line);display:block}
+.cmp figcaption{font-family:var(--mono);font-size:12px;color:var(--tx3);margin-top:8px;text-align:center}
+@media(max-width:720px){.cmp{grid-template-columns:1fr}}
+
+/* ---------- demo ---------- */
+.demo{background:linear-gradient(180deg,var(--bg2),var(--bg));border:1px dashed #2a3a6e;border-radius:16px;
+  padding:44px 28px;text-align:center}
+.demo .play{width:74px;height:74px;border-radius:50%;border:2px solid var(--acc);display:inline-flex;align-items:center;justify-content:center;margin-bottom:18px}
+.demo .play::after{content:"";border-left:20px solid var(--acc);border-top:12px solid transparent;border-bottom:12px solid transparent;margin-left:5px}
+.demo h3{font-size:18px;margin-bottom:8px}
+.demo p{color:var(--tx2);font-size:14px;max-width:560px;margin:0 auto}
+.demo .soon{margin-top:16px;font-family:var(--mono);font-size:12px;color:var(--gold)}
+
+/* ---------- stack ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 16px;font-size:13.5px;color:var(--tx2)}
+.chip b{color:var(--tx);font-weight:600;margin-right:6px}
+a.chip:hover{border-color:#38508f;text-decoration:none;transform:translateY(-1px)}
+.stackgroups{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:26px}
+.sg{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.sg h4{font-size:13px;color:var(--acc);font-family:var(--mono);letter-spacing:1px;margin-bottom:10px}
+.sg p{font-size:13.5px;color:var(--tx2)}
+
+/* ---------- method ---------- */
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;counter-reset:step}
+.step{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;counter-increment:step;position:relative}
+.step::before{content:counter(step,decimal-leading-zero);font-family:var(--mono);font-size:11px;color:var(--acc);display:block;margin-bottom:6px}
+.step b{font-size:14px;display:block;margin-bottom:4px}
+.step p{font-size:12.5px;color:var(--tx3)}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--line);padding:36px 0 48px;color:var(--tx3);font-size:13px}
+footer .f{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:baseline}
+.note{margin-top:14px;font-size:12px;color:#54689a;max-width:820px}
+@media(max-width:640px){section{padding:52px 0}.hero{padding:64px 0 48px}}
+</style>
+</head>
+<body>
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <div class="wrap">
+    <div class="tag"><i></i>个人数据工程作品 · 胡惠敏</div>
+    <h1>MMDP <em>多模态数据工厂</em></h1>
+    <p class="lede">从 12 页产品原型出发，<b>契约冻结 → 逐卡实施 → 机器门禁验收</b>，交付一座可运转的数据工厂：
+      <b>采集接入 → Temporal 编排 → 多模态解析 → 质量门禁 → 知识治理 → 资产发布</b> 全链路真实闭环，
+      并以幂等与故障注入验证其可靠性。</p>
+    <div class="cta">
+      <a class="btn main" href="prototypes/home.html" target="_blank">▶ 点开交互原型（12 页可操作）</a>
+      <a class="btn ghost" href="#gallery">看真实系统截图</a>
+      <a class="btn ghost" href="#arch">架构总览</a>
+      <a class="btn ghost" href="#demo">演示（即将开放）</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>12<i>/12</i></b><span>产品页 原型↔实现对照核验</span></div>
+      <div class="stat"><b>43<i>/43</i></b><span>工程任务卡 机器门禁全通过</span></div>
+      <div class="stat"><b>78</b><span>产品功能点 登记追踪（PF 台账）</span></div>
+      <div class="stat"><b>745<i>+</i></b><span>自动化测试 全绿（后端+专项+前端+E2E）</span></div>
+      <div class="stat"><b>16</b><span>冻结契约 FROZEN（双指纹钉版）</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= ARCHITECTURE ================= -->
+<section id="arch">
+  <div class="wrap">
+    <div class="kicker">Architecture</div>
+    <h2>架构总览</h2>
+    <p class="sub">权威单源（PostgreSQL）+ 对象存证（MinIO 内容寻址）+ 工作流编排（Temporal）+ 图投影（Neo4j）+
+      多模态引擎（macOS 原生框架）。跨存储无分布式事务，以<b>同事务写入 + 水位线 + 对账</b>保障一致性。</p>
+    <div class="arch">
+      <svg viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang SC,sans-serif">
+        <defs>
+          <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2a55"/><stop offset="1" stop-color="#141d38"/></linearGradient>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#5b9dff"/></marker>
+        </defs>
+        <!-- 产品层 -->
+        <rect x="40" y="24" width="880" height="78" rx="12" fill="url(#g1)" stroke="#24325e"/>
+        <text x="64" y="54" fill="#7ee0c3" font-size="12" font-family="monospace" letter-spacing="2">PRODUCT · 12 页</text>
+        <text x="64" y="80" fill="#e8edf8" font-size="15" font-weight="600">React 18 + Ant Design —— 总览 / 数据源 / 任务 / 运行 / 原始数据 / 解析 / 清洗 / 知识 / 质量 / 资产 / 系统 / 壳</text>
+        <!-- API 层 -->
+        <rect x="40" y="128" width="880" height="78" rx="12" fill="url(#g1)" stroke="#24325e"/>
+        <text x="64" y="158" fill="#7ee0c3" font-size="12" font-family="monospace" letter-spacing="2">API · 冻结契约 (OpenAPI 16/16 FROZEN)</text>
+        <text x="64" y="184" fill="#e8edf8" font-size="15" font-weight="600">FastAPI —— RBAC 三角色 · 写键幂等 · 审批/决策/发布治理端点 · append-only 审计</text>
+        <!-- 编排层 -->
+        <rect x="40" y="232" width="424" height="72" rx="12" fill="url(#g1)" stroke="#24325e"/>
+        <text x="64" y="260" fill="#ffd479" font-size="12" font-family="monospace" letter-spacing="2">ORCHESTRATION</text>
+        <text x="64" y="284" fill="#e8edf8" font-size="14.5" font-weight="600">Temporal —— 暂停/恢复/重试 · 状态机 10 态</text>
+        <!-- 引擎层 -->
+        <rect x="496" y="232" width="424" height="72" rx="12" fill="url(#g1)" stroke="#24325e"/>
+        <text x="520" y="260" fill="#ffd479" font-size="12" font-family="monospace" letter-spacing="2">MULTIMODAL ENGINE</text>
+        <text x="520" y="284" fill="#e8edf8" font-size="14.5" font-weight="600">MMDPEngine —— OCR / ASR / 视频（macOS 原生框架）</text>
+        <!-- 存储层 -->
+        <rect x="40" y="336" width="280" height="150" rx="12" fill="url(#g1)" stroke="#24325e"/>
+        <text x="64" y="364" fill="#5b9dff" font-size="12" font-family="monospace" letter-spacing="2">SOURCE OF TRUTH</text>
+        <text x="64" y="388" fill="#e8edf8" font-size="14.5" font-weight="600">PostgreSQL</text>
+        <text x="64" y="410" fill="#9db0d4" font-size="12.5">权威业务状态 · 迁移链 0001→0005</text>
+        <text x="64" y="430" fill="#9db0d4" font-size="12.5">质量门禁 CP-1/CP-2 · 审计触发器</text>
+        <text x="64" y="450" fill="#9db0d4" font-size="12.5">水位线只进不退</text>
+        <rect x="340" y="336" width="280" height="150" rx="12" fill="url(#g1)" stroke="#24325e"/>
+        <text x="364" y="364" fill="#5b9dff" font-size="12" font-family="monospace" letter-spacing="2">OBJECT STORAGE</text>
+        <text x="364" y="388" fill="#e8edf8" font-size="14.5" font-weight="600">MinIO</text>
+        <text x="364" y="410" fill="#9db0d4" font-size="12.5">raw 原件内容寻址（sha256）</text>
+        <text x="364" y="430" fill="#9db0d4" font-size="12.5">复算守卫 fail-closed · 不可变追加</text>
+        <text x="364" y="450" fill="#9db0d4" font-size="12.5">gold 发布产物（manifest 可回算）</text>
+        <rect x="640" y="336" width="280" height="150" rx="12" fill="url(#g1)" stroke="#24325e"/>
+        <text x="664" y="364" fill="#5b9dff" font-size="12" font-family="monospace" letter-spacing="2">PROJECTION</text>
+        <text x="664" y="388" fill="#e8edf8" font-size="14.5" font-weight="600">Neo4j</text>
+        <text x="664" y="410" fill="#9db0d4" font-size="12.5">PUBLISHED 折叠集投影（非权威）</text>
+        <text x="664" y="430" fill="#9db0d4" font-size="12.5">收敛清理 · 双侧 id-set 对账</text>
+        <text x="664" y="450" fill="#9db0d4" font-size="12.5">多跳查询经 PG 递归 CTE</text>
+        <!-- 一致性带 -->
+        <rect x="40" y="506" width="880" height="40" rx="10" fill="#0e1f1b" stroke="#1f4a41"/>
+        <text x="480" y="531" fill="#7ee0c3" font-size="13" text-anchor="middle">一致性策略：发布三条件同事务（PG 事务内写 gold）· 投影水位线 GREATEST · reconciliation 对账 · 传播链可重入</text>
+        <!-- 箭头 -->
+        <line x1="480" y1="102" x2="480" y2="126" stroke="#5b9dff" stroke-width="1.5" marker-end="url(#ar)"/>
+        <line x1="252" y1="206" x2="180" y2="334" stroke="#5b9dff" stroke-width="1.5" marker-end="url(#ar)"/>
+        <line x1="480" y1="206" x2="480" y2="230" stroke="#5b9dff" stroke-width="1.5" marker-end="url(#ar)"/>
+        <line x1="708" y1="206" x2="780" y2="334" stroke="#5b9dff" stroke-width="1.5" marker-end="url(#ar)"/>
+        <line x1="252" y1="304" x2="200" y2="334" stroke="#5b9dff" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#ar)"/>
+        <line x1="708" y1="304" x2="740" y2="334" stroke="#5b9dff" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#ar)"/>
+      </svg>
+    </div>
+    <div class="legend">
+      <span><s style="background:#5b9dff"></s>同步调用</span>
+      <span><s style="background:#5b9dff;opacity:.55"></s>事件/投影（异步）</span>
+      <span><s style="background:#7ee0c3"></s>一致性保障层</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HIGHLIGHTS ================= -->
+<section id="hl">
+  <div class="wrap">
+    <div class="kicker">Engineering Highlights</div>
+    <h2>六个工程亮点</h2>
+    <p class="sub">不是功能堆叠，而是数据平台最难的几件事：一致性、幂等、可靠性、可验收性。</p>
+    <div class="grid3">
+      <div class="card"><h3><b>GATE</b>质量硬门禁 · 发布事务屏障</h3><p>CP-1 切片完整 / CP-2 事实审核态 / P0 三条件（manifest 回算 + 时间戳 + 水位线）<code>同一事务</code>提交；19 项发布反向场景实测零非法发布。</p></div>
+      <div class="card"><h3><b>IDEMPOTENT</b>11 域幂等机制实测</h3><p>写键唯一约束、乐观锁、行锁、activity 5 元组、uq 回捞——13 类冲突全部 <code>409 家族</code>拒绝，非预期重复副作用为零。</p></div>
+      <div class="card"><h3><b>CHAOS</b>真实故障注入</h3><p>容器停止 / DB 会话终止 / 存储下线 / 引擎断连 / 损坏输入——<code>真实基础设施事件</code>注入（非模拟日志），三阶段取证（前/注/恢）。</p></div>
+      <div class="card"><h3><b>AUDIT</b>append-only 审计</h3><p>数据库触发器强制只追加，超级用户 DELETE 亦拒；敏感操作（审批/决策/发布/作废/投影）逐操作留痕，<code>trace_id</code> 全链贯穿。</p></div>
+      <div class="card"><h3><b>RABC</b>权限与数据安全</h3><p>三角色 RBAC + 对象生命周期门（presign 仅 ACTIVE）；13 族越权场景全拒 403/401，错误体零敏感信息泄露，DSR 开关保持关闭。</p></div>
+      <div class="card"><h3><b>TRACEABLE</b>逐卡验收 · 证据链</h3><p>43 张任务卡、每卡冻结任务书→红步全录→官方净周期绿档→机器门禁 <code>check G1–G18</code> 收敛后才翻卡——工程过程本身可审计。</p></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================= PROTOTYPE ================= -->
+<section id="proto">
+  <div class="wrap">
+    <div class="kicker">Interactive Prototype · 产品设计</div>
+    <h2>高保真交互原型 <span class="pill y">设计稿 · 演示数据</span></h2>
+    <p class="sub">这是产品的设计基准：12 页原型先行冻结，工程实现按原型逐页对照交付。页面里的数据为<b>设计演示数据</b>，
+      交互（抽屉 / 筛选 / 图表 / 状态流转）可真实点击——用于感受产品设计意图。</p>
+    <div class="chips" style="margin-bottom:22px">
+      <a class="chip" href="prototypes/home.html" target="_blank"><b>🏠 总览</b>home</a>
+      <a class="chip" href="prototypes/sources.html" target="_blank"><b>🔌 数据源</b>sources</a>
+      <a class="chip" href="prototypes/create.html" target="_blank"><b>✏️ 建任务</b>create</a>
+      <a class="chip" href="prototypes/tasks.html" target="_blank"><b>📋 任务管理</b>tasks</a>
+      <a class="chip" href="prototypes/run.html" target="_blank"><b>⚙️ 运行详情</b>run</a>
+      <a class="chip" href="prototypes/raw-data.html" target="_blank"><b>📦 原始数据</b>raw-data</a>
+      <a class="chip" href="prototypes/parsing.html" target="_blank"><b>🔍 多模态解析</b>parsing</a>
+      <a class="chip" href="prototypes/cleaning.html" target="_blank"><b>🧹 清洗</b>cleaning</a>
+      <a class="chip" href="prototypes/knowledge.html" target="_blank"><b>🕸️ 知识治理</b>knowledge</a>
+      <a class="chip" href="prototypes/quality.html" target="_blank"><b>✅ 质量审核</b>quality</a>
+      <a class="chip" href="prototypes/assets.html" target="_blank"><b>💼 资产交付</b>assets</a>
+      <a class="chip" href="prototypes/system.html" target="_blank"><b>🖥️ 系统监控</b>system</a>
+    </div>
+    <div class="cmp">
+      <figure><a href="prototypes/home.html" target="_blank"><img src="shots/proto_home.png" alt="原型总览"></a><figcaption>原型 · 总览（点开可交互）</figcaption></figure>
+      <figure><a href="prototypes/run.html" target="_blank"><img src="shots/proto_run.png" alt="原型运行详情"></a><figcaption>原型 · 运行详情（点开可交互）</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- ================= GALLERY ================= -->
+<section id="gallery">
+  <div class="wrap">
+    <div class="kicker">Implementation · 工程实现</div>
+    <h2>真实系统 <span class="pill g">运行实测 · 真实接口数据</span></h2>
+    <p class="sub">以下为运行中系统的实测截图（登录态、真实接口数据），非设计稿。每页均与 12 页产品原型逐页对照核验。</p>
+    <div class="gal">
+      <div class="shot"><img src="shots/react_home.png" alt="总览"><div class="cap"><b>数据工厂总览</b><span>home</span></div></div>
+      <div class="shot"><img src="shots/react_sources.png" alt="数据源"><div class="cap"><b>数据源与连接器</b><span>sources</span></div></div>
+      <div class="shot"><img src="shots/react_create.png" alt="创建任务"><div class="cap"><b>创建采集任务</b><span>create</span></div></div>
+      <div class="shot"><img src="shots/react_tasks.png" alt="任务管理"><div class="cap"><b>采集任务管理</b><span>tasks</span></div></div>
+      <div class="shot"><img src="shots/react_run.png" alt="运行详情"><div class="cap"><b>运行详情 · 状态机</b><span>run</span></div></div>
+      <div class="shot"><img src="shots/react_raw-data.png" alt="原始数据"><div class="cap"><b>原始数据管理</b><span>raw-data</span></div></div>
+      <div class="shot"><img src="shots/react_parsing.png" alt="多模态解析"><div class="cap"><b>多模态解析</b><span>parsing</span></div></div>
+      <div class="shot"><img src="shots/react_cleaning.png" alt="清洗"><div class="cap"><b>清洗与标准化</b><span>cleaning</span></div></div>
+      <div class="shot"><img src="shots/react_knowledge.png" alt="知识治理"><div class="cap"><b>知识治理 · 实体消歧</b><span>knowledge</span></div></div>
+      <div class="shot"><img src="shots/react_quality.png" alt="质量"><div class="cap"><b>数据质量与审核</b><span>quality</span></div></div>
+      <div class="shot"><img src="shots/react_assets.png" alt="资产"><div class="cap"><b>数据资产与交付</b><span>assets</span></div></div>
+      <div class="shot"><img src="shots/react_system.png" alt="系统"><div class="cap"><b>调度集群 · 系统监控</b><span>system</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= COMPARE ================= -->
+<section id="compare">
+  <div class="wrap">
+    <div class="kicker">Prototype ↔ Product</div>
+    <h2>原型 ↔ 实现 对照（节选）</h2>
+    <p class="sub">12 页产品原型是最终产品基准：页面结构、布局、功能入口、交互、业务语义逐页对照；未实现的能力如实标注「未接入」，不以演示数字冒充真值。</p>
+    <div class="cmp">
+      <figure><img src="shots/proto_home.png" alt="总览原型"><figcaption>原型 · 总览</figcaption></figure>
+      <figure><img src="shots/react_home.png" alt="总览实现"><figcaption>实现 · 总览（真实数据）</figcaption></figure>
+      <figure><img src="shots/proto_run.png" alt="运行原型"><figcaption>原型 · 运行详情</figcaption></figure>
+      <figure><img src="shots/react_run.png" alt="运行实现"><figcaption>实现 · 运行详情（真实状态机）</figcaption></figure>
+    </div>
+    <p style="margin-top:18px;font-size:13px;color:var(--tx3)">全部 12 页 ×（原型 / 实现）24 张对照截图随项目归档，可逐页复核。</p>
+  </div>
+</section>
+
+<!-- ================= DEMO ================= -->
+<section id="demo">
+  <div class="wrap">
+    <div class="kicker">Live Demo</div>
+    <h2>演示</h2>
+    <div class="demo">
+      <div class="play"></div>
+      <h3>操作演示视频 · 在线可试环境</h3>
+      <p>录制中：三分钟动线——注册数据源 → 审批 → 建任务 → 暂停/恢复 → 质量门禁 → 资产发布与证据追溯。</p>
+      <div class="soon">🚀 在线演示环境即将开放（口令访问）</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= STACK ================= -->
+<section id="stack">
+  <div class="wrap">
+    <div class="kicker">Tech Stack</div>
+    <h2>技术栈</h2>
+    <div class="stackgroups">
+      <div class="sg"><h4>BACKEND</h4><p>Python 3.12 · FastAPI · SQLAlchemy 2 · Alembic 迁移链 · psycopg 3 · 自实现 S3 签名协议（零重型 SDK 依赖）</p></div>
+      <div class="sg"><h4>FRONTEND</h4><p>React 18 · TypeScript（tsc 严格模式）· Ant Design 5 · TanStack Query · Vite · Vitest 112 测试</p></div>
+      <div class="sg"><h4>DATA & ORCHESTRATION</h4><p>PostgreSQL 16（权威单源 + 触发器审计）· MinIO（raw/gold 内容寻址）· Temporal（工作流编排）· Neo4j 5（图投影）</p></div>
+      <div class="sg"><h4>MULTIMODAL ENGINE</h4><p>macOS 原生框架：Vision（OCR）/ Speech（ASR）/ AVFoundation（视频采样）——零模型下载，系统级推理</p></div>
+      <div class="sg"><h4>QUALITY ENGINEERING</h4><p>Playwright E2E（系统 Chrome）· unittest 专项族 · 机器门禁 check（G1–G18）· Docker 隔离净周期 · 证据链归档</p></div>
+      <div class="sg"><h4>DELIVERY</h4><p>冻结契约 16 份（schema/openapi 双指纹）· CR 治理台账 · 发布 Manifest（sha256 校验 exit 0）· Runbook 冷启动可复现</p></div>
+    </div>
+    <div class="chips">
+      <span class="chip"><b>语言</b>Python / TypeScript / SQL</span>
+      <span class="chip"><b>API</b>FastAPI + OpenAPI</span>
+      <span class="chip"><b>UI</b>React + AntD</span>
+      <span class="chip"><b>编排</b>Temporal</span>
+      <span class="chip"><b>OLTP</b>PostgreSQL 16</span>
+      <span class="chip"><b>对象</b>MinIO S3</span>
+      <span class="chip"><b>图</b>Neo4j 5</span>
+      <span class="chip"><b>E2E</b>Playwright</span>
+      <span class="chip"><b>容器</b>Docker Compose</span>
+      <span class="chip"><b>迁移</b>Alembic</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= METHOD ================= -->
+<section id="method">
+  <div class="wrap">
+    <div class="kicker">How It Was Built</div>
+    <h2>工程方法：从原型到验收</h2>
+    <p class="sub">43 张任务卡、77 轮迭代、每一轮都留机器可复核的证据链——这套流程本身就是作品的一部分。</p>
+    <div class="flow">
+      <div class="step"><b>契约冻结</b><p>Schema/OpenAPI 先冻结、双指纹钉版；任何变更走 CR 台账审批，绝不静默改契约。</p></div>
+      <div class="step"><b>任务卡拆解</b><p>43 张卡依赖成 DAG；每卡冻结任务书（范围/白名单/验收判据），边界不含糊。</p></div>
+      <div class="step"><b>小步实施</b><p>红步全录：首次失败原样留档，根因分类（断言/环境/产品/第三方），不删不改。</p></div>
+      <div class="step"><b>隔离验证</b><p>Docker 独立净周期：每轮从零起栈跑全量回归，历史 11 族专项套件全绿才继续。</p></div>
+      <div class="step"><b>机器门禁</b><p>每轮 G1–G18 机器 check 收敛（VERIFIED=1）才允许翻卡；人工 Gate 独立留档。</p></div>
+      <div class="step"><b>单次提交</b><p>定向暂存白名单、单 commit 收官；主库零污染、历史证据零覆盖。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="wrap f">
+    <div><b style="color:var(--tx)">MMDP 多模态数据工厂</b> · 个人数据工程作品 · 胡惠敏</div>
+    <div>12 页产品 · 43/43 任务卡 · 745+ 测试全绿</div>
+  </div>
+  <div class="wrap note">说明：本作品为求职演示用途的个人工程项目，页面数据为隔离环境的夹具播种数据；多模态解析依赖 macOS
+  系统框架（服务器环境如实显示「引擎未部署」）；生产部署与真实数据运营未包含在本作品范围内。截图取自运行中的真实系统，未做修饰。</div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>多模态解析 · 多模态数据工厂</title>
+<script src="../assets/js/tailwindcss.js"></script>
+<script src="../assets/js/iconify-icon.min.js"></script>
+<style>
+  :root{--primary:#1677ff;--primary-weak:#eaf2ff;--success:#52c41a;--warning:#faad14;--error:#ff4d4f;--text:#1f2329;--text-2:#5c6570;--text-3:#8a94a6;--line:#e6eaf0;--bg:#f5f7fa}
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+  a{color:inherit;text-decoration:none} button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  iconify-icon{display:inline-flex;align-items:center;justify-content:center}
+  .num{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .card{background:#fff;border:1px solid var(--line);border-radius:10px}
+  .tb-ico{display:grid;place-items:center;width:32px;height:32px;border-radius:7px;color:#5c6570}
+  .tb-ico:hover{background:#f2f5fa;color:#1677ff}
+  .nav-group{padding:14px 10px 6px;font-size:11px;letter-spacing:.08em;color:#9aa3b2;font-weight:600}
+  .nav-item{display:flex;align-items:center;gap:9px;height:36px;padding:0 10px;border-radius:7px;color:#4a5361;margin-bottom:2px;font-size:13px}
+  .nav-item:hover{background:#f4f7fb;color:#1677ff}
+  .nav-item iconify-icon{font-size:16px;color:#7b8494;flex:none}
+  .nav-item.active{background:var(--primary-weak);color:var(--primary);font-weight:600}
+  .nav-item.active iconify-icon{color:var(--primary)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 12px;border-radius:7px;border:1px solid var(--line);background:#fff;font-size:13px;color:var(--text);transition:.15s;white-space:nowrap}
+  .btn:hover{border-color:#1677ff;color:#1677ff}
+  .btn-primary{background:var(--primary);border-color:var(--primary);color:#fff}
+  .btn-primary:hover{background:#4096ff;border-color:#4096ff;color:#fff}
+  .btn-sm{height:28px;padding:0 9px;font-size:12px}
+  .inp{height:32px;border:1px solid var(--line);border-radius:7px;padding:0 10px;font-size:13px;background:#fff;color:var(--text);outline:none;width:100%}
+  .inp:focus{border-color:#1677ff;box-shadow:0 0 0 3px rgba(22,119,255,.1)}
+  .tag{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 7px;border-radius:5px;font-size:12px;line-height:1;border:1px solid transparent;white-space:nowrap}
+  .tag-blue{background:#eaf2ff;border-color:#c9ddff;color:#1677ff}
+  .tag-green{background:#f0fbe9;border-color:#cdebb8;color:#3f9c12}
+  .tag-orange{background:#fff8e8;border-color:#ffe1a8;color:#c77c00}
+  .tag-red{background:#fff1f0;border-color:#ffccc7;color:#d4380d}
+  .tag-gray{background:#f4f6f9;border-color:#e3e8ef;color:#5c6570}
+  .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+  .mask{position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:80;display:none}
+  .mask.open{display:block}
+  .toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-10px);z-index:120;background:#1f2329;color:#fff;font-size:13px;padding:9px 16px;border-radius:8px;opacity:0;transition:.2s;pointer-events:none;display:flex;align-items:center;gap:7px}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .scroll-none{scrollbar-width:none} .scroll-none::-webkit-scrollbar{display:none}
+  .scroll-thin{scrollbar-width:thin;scrollbar-color:#d5dbe5 transparent}
+  .scroll-thin::-webkit-scrollbar{width:6px;height:6px}
+  .scroll-thin::-webkit-scrollbar-thumb{background:#d5dbe5;border-radius:3px}
+  .link{color:#1677ff} .link:hover{text-decoration:underline}
+  .job{border:1px solid #e6eaf0;border-radius:9px;padding:10px;text-align:left;width:100%;background:#fff;transition:.15s}
+  .job:hover{border-color:#91caff;background:#fbfdff}
+  .job.on{border-color:#1677ff;background:#f5f9ff;box-shadow:0 0 0 3px rgba(22,119,255,.08)}
+  .block{border:1px solid #eef1f6;border-radius:7px;padding:8px 10px;background:#fff;font-size:12px;line-height:1.7}
+  .block.low{border-color:#ffd591;background:#fffbf2}
+  .block.bad{border-color:#ffccc7;background:#fff8f7}
+  .bar{height:5px;border-radius:3px;background:#f0f2f6;overflow:hidden}
+  .bar>span{display:block;height:100%;border-radius:3px}
+  .scene{background:linear-gradient(165deg,#eef4ff 0%,#dbe8ff 55%,#c9ddff 100%);border-radius:8px;position:relative;overflow:hidden}
+  .scene .paper{position:absolute;background:#fff;border-radius:3px;box-shadow:0 6px 16px rgba(15,35,70,.12)}
+  .bbox{position:absolute;border:1.5px solid #1677ff;background:rgba(22,119,255,.08);border-radius:2px}
+  .bbox.warn{border-color:#faad14;background:rgba(250,173,20,.12)}
+  .bbox-tag{position:absolute;top:-16px;left:-1px;background:#1677ff;color:#fff;font-size:9px;padding:0 4px;border-radius:2px;white-space:nowrap}
+  .bbox.warn .bbox-tag{background:#faad14}
+</style>
+</head>
+<body>
+<header class="h-14 bg-white border-b border-[#e6eaf0] flex items-center gap-3 px-4 sticky top-0 z-40">
+<a class="flex items-center gap-2.5 pr-2 min-w-[208px]" href="home.html">
+<span class="w-7 h-7 rounded-[8px] bg-[#1677ff] text-white grid place-items-center text-[12px] font-bold">DF</span>
+<span class="text-[15px] font-semibold whitespace-nowrap">多模态数据工厂</span>
+<span class="text-[10px] leading-4 px-1 rounded bg-[#eef4ff] text-[#1677ff] border border-[#cfe0ff]">ENT</span>
+</a>
+<button class="hidden lg:flex items-center gap-2 h-8 px-2.5 rounded-md border border-[#e6eaf0] text-[12.5px] hover:bg-[#f7f9fc] whitespace-nowrap">
+<iconify-icon class="text-[14px] text-[#5c6570]" icon="lucide:layers"></iconify-icon><span>高校科研数据空间</span>
+<iconify-icon class="text-[12px] text-[#8a94a6]" icon="lucide:chevron-down"></iconify-icon>
+</button>
+<div class="flex-1 min-w-0 flex justify-center px-2">
+<button class="w-full max-w-[440px] h-9 flex items-center gap-2 px-3 rounded-lg bg-[#f5f7fa] border border-[#e6eaf0] text-[13px] text-[#8a94a6] hover:border-[#1677ff] hover:bg-white" id="gsBtn">
+<iconify-icon class="text-[15px]" icon="lucide:search"></iconify-icon><span class="truncate">搜索教师、任务、数据源，或输入指令</span>
+<kbd class="ml-auto text-[11px] border border-[#e0e5ee] rounded px-1.5 py-0.5 bg-white">⌘K</kbd>
+</button>
+</div>
+<button class="tb-ico"><iconify-icon class="text-[17px]" icon="lucide:circle-help"></iconify-icon></button>
+<button class="tb-ico relative" id="bellBtn">
+<iconify-icon class="text-[17px]" icon="lucide:bell"></iconify-icon>
+<span class="absolute top-1 right-1 min-w-[15px] h-[15px] px-1 rounded-full bg-[#ff4d4f] text-white text-[10px] leading-[15px] text-center num" id="bellDot">3</span>
+</button>
+<div class="flex items-center gap-2 pl-3 border-l border-[#e6eaf0]">
+<span class="w-7 h-7 rounded-full bg-[#eaf2ff] text-[#1677ff] grid place-items-center text-[12px] font-semibold">李</span>
+<div class="hidden xl:block leading-tight"><div class="text-[12.5px]">李思远</div><div class="text-[11px] text-[#8a94a6]">平台管理员</div></div>
+<iconify-icon class="text-[12px] text-[#8a94a6]" icon="lucide:chevron-down"></iconify-icon>
+</div>
+</header>
+<div class="flex items-start">
+<aside class="w-[224px] shrink-0 bg-white border-r border-[#e6eaf0] h-[calc(100vh-56px)] sticky top-14 hidden md:flex flex-col">
+<div class="p-3 pb-1"><a class="btn btn-primary w-full" href="create.html"><iconify-icon class="text-[15px]" icon="lucide:plus"></iconify-icon>新建数据流水线</a></div>
+<nav class="flex-1 overflow-y-auto scroll-thin px-2 pb-3">
+<p class="nav-group">数据接入</p>
+<a class="nav-item" href="home.html"><iconify-icon icon="lucide:layout-dashboard"></iconify-icon>数据工厂总览</a>
+<a class="nav-item" href="sources.html"><iconify-icon icon="lucide:plug"></iconify-icon>数据源与连接器</a>
+<a class="nav-item" href="tasks.html"><iconify-icon icon="lucide:list-tree"></iconify-icon>采集任务管理<span class="ml-auto text-[11px] num px-1.5 rounded bg-[#fff7e6] text-[#c77c00]">3</span></a>
+<p class="nav-group">处理加工</p>
+<a class="nav-item" href="raw-data.html"><iconify-icon icon="lucide:folder-open"></iconify-icon>原始数据管理</a>
+<a class="nav-item active" href="parsing.html"><iconify-icon icon="lucide:scan-text"></iconify-icon>多模态解析</a>
+<a class="nav-item" href="cleaning.html"><iconify-icon icon="lucide:filter"></iconify-icon>清洗与标准化</a>
+<p class="nav-group">知识治理</p>
+<a class="nav-item" href="knowledge.html"><iconify-icon icon="lucide:share-2"></iconify-icon>实体与知识关联</a>
+<p class="nav-group">质量交付</p>
+<a class="nav-item" href="quality.html"><iconify-icon icon="lucide:shield-check"></iconify-icon>数据质量与审核<span class="ml-auto text-[11px] num px-1.5 rounded bg-[#fff1f0] text-[#d4380d]" data-badge="pendingReview">12</span></a>
+<a class="nav-item" href="assets.html"><iconify-icon icon="lucide:package-check"></iconify-icon>数据资产与交付</a>
+<p class="nav-group">系统</p>
+<a class="nav-item" href="system.html"><iconify-icon icon="lucide:settings"></iconify-icon>系统管理与监控</a>
+</nav>
+<div class="border-t border-[#e6eaf0] px-3 py-2.5 text-[11px] text-[#8a94a6] flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-[#52c41a]"></span>调度集群正常 · 4/4 在线</div>
+</aside>
+<main class="flex-1 min-w-0 p-4 lg:p-6">
+<div class="flex flex-wrap items-end justify-between gap-3 mb-4">
+<div>
+<nav class="flex items-center gap-1.5 text-[12px] text-[#8a94a6] mb-1.5">
+<span>工作空间</span><iconify-icon class="text-[11px]" icon="lucide:chevron-right"></iconify-icon>
+<span>处理加工</span><iconify-icon class="text-[11px]" icon="lucide:chevron-right"></iconify-icon>
+<span class="text-[#5c6570]">多模态解析</span>
+</nav>
+<h1 class="text-[20px] font-semibold leading-7">多模态解析</h1>
+<p class="text-[12px] text-[#8a94a6] mt-1">OCR / ASR / PDF 结构还原 / 图像理解 / 视频关键帧，统一输出结构化 JSON</p>
+</div>
+<div class="flex items-center gap-2">
+<select class="inp" style="width:240px"><option>ocr-vision 1.0.0（vision-accurate@macos-26.4）</option><option>asr-speech 1.0.0（speech-ondevice@macos-26.4）</option><option>video-avf-vision 1.0.0（avf-vision@macos-26.4）</option><option>pdf-minimal 1.0.0（冻结面）</option><option>html-minimal 1.0.0（冻结面）</option><option>text-minimal 1.0.0（冻结面）</option></select><!-- H04-03（R69 2026-11-19）：真实冻结解析器清单替换虚构引擎名 -->
+<button class="btn" onclick="requeueAll()"><iconify-icon class="text-[14px]" icon="lucide:refresh-cw"></iconify-icon>重跑失败任务</button>
+<a class="btn btn-primary" href="raw-data.html"><iconify-icon class="text-[15px]" icon="lucide:upload"></iconify-icon>选择文件解析</a>
+</div>
+</div>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+<div class="card p-4"><div class="text-[12px] text-[#5c6570]">今日解析任务</div><div class="mt-1.5 num text-[28px] leading-8 font-semibold">386</div><div class="text-[11.5px] text-[#8a94a6] mt-1">成功 361 · 失败 12 · 进行中 13</div></div>
+<div class="card p-4"><div class="text-[12px] text-[#5c6570]">平均 OCR 置信度</div><div class="mt-1.5 num text-[28px] leading-8 font-semibold text-[#3f9c12]">0.912</div><div class="text-[11.5px] text-[#8a94a6] mt-1">阈值 0.75 以下转人工</div></div>
+<div class="card p-4"><div class="text-[12px] text-[#5c6570]">低置信度记录</div><div class="mt-1.5 num text-[28px] leading-8 font-semibold text-[#d4380d]">46</div><div class="text-[11.5px] text-[#d4380d] mt-1">含 9 张倾斜扫描件</div></div>
+<div class="card p-4"><div class="text-[12px] text-[#5c6570]">三模态实测（R69·真实部署路径）</div><div class="mt-1.5 num text-[22px] leading-8 font-semibold">RTF 0.02–0.10</div><div class="text-[11.5px] text-[#8a94a6] mt-1">OCR 单图 ≤0.13s · 视频帧抽取+OCR 0.14s · 无 GPU（C3：系统框架 CPU/ANE——ADR-011「26.4 页/分钟」为演示值不沿用）</div></div><!-- H04-03（R69）：C3 无 GPU 实测口径替换虚构吞吐卡 -->
+</div>
+<!-- ============ H04-03（R69 2026-11-19）真实解析能力登记·样本演示面（卡内授权深化） ============ -->
+<section class="card p-4 mb-4">
+<div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+<div class="flex items-center gap-2">
+<span class="text-[13px] font-semibold">真实解析能力登记</span>
+<span class="tag tag-green">已验收（H04-03 · 2026-11-19）</span>
+<span class="tag tag-gray">env 门控默认关</span>
+</div>
+<span class="text-[11px] text-[#8a94a6]">下方任务队列为原型演示数据；本节为 R69 实测真值</span>
+</div>
+<div class="overflow-x-auto scroll-thin">
+<table class="w-full text-[12px]" style="border-collapse:collapse">
+<thead><tr class="text-left text-[#8a94a6]">
+<th class="py-1.5 pr-3 font-normal">模态</th><th class="py-1.5 pr-3 font-normal">解析器（parser/version）</th><th class="py-1.5 pr-3 font-normal">model_version 落库值</th><th class="py-1.5 pr-3 font-normal">引擎 · 来源 · 许可</th><th class="py-1.5 pr-3 font-normal">实测（容器→宿主引擎端到端）</th>
+</tr></thead>
+<tbody class="num" style="color:#3b4350">
+<tr style="border-top:1px solid #f0f2f6"><td class="py-1.5 pr-3">图片 OCR</td><td class="py-1.5 pr-3">ocr-vision @ 1.0.0</td><td class="py-1.5 pr-3">vision-accurate@macos-26.4</td><td class="py-1.5 pr-3">Apple Vision · 系统框架随 OS · 零下载零外联</td><td class="py-1.5 pr-3">单图 60–133ms · bbox 归一化 · conf 三位小数</td></tr>
+<tr style="border-top:1px solid #f0f2f6"><td class="py-1.5 pr-3">音频 ASR</td><td class="py-1.5 pr-3">asr-speech @ 1.0.0</td><td class="py-1.5 pr-3">speech-ondevice@macos-26.4</td><td class="py-1.5 pr-3">Apple Speech 端上 · requiresOnDeviceRecognition</td><td class="py-1.5 pr-3">zh 精确 / en WER≤0.5 · RTF 0.022–0.104</td></tr>
+<tr style="border-top:1px solid #f0f2f6"><td class="py-1.5 pr-3">视频解析</td><td class="py-1.5 pr-3">video-avf-vision @ 1.0.0</td><td class="py-1.5 pr-3">avf-vision@macos-26.4</td><td class="py-1.5 pr-3">AVFoundation demux + Vision 帧 OCR</td><td class="py-1.5 pr-3">143ms · tracks+等距帧段 · RTF 0.081</td></tr>
+<tr style="border-top:1px solid #f0f2f6"><td class="py-1.5 pr-3">PDF/HTML/文本</td><td class="py-1.5 pr-3">pdf/html/text-minimal</td><td class="py-1.5 pr-3">—（冻结面）</td><td class="py-1.5 pr-3">H03-03/H03-13 冻结解析器原样复用</td><td class="py-1.5 pr-3">编排 collect 链沿用（不经多模态分支）</td></tr>
+</tbody>
+</table>
+</div>
+<div class="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
+<div class="rounded-lg border border-[#f0f2f6] p-3">
+<div class="text-[12px] font-semibold mb-2">验收样本演示面（全部自产 · 真值已知 · 大体积媒体不入 Git）</div>
+<div class="space-y-1.5 text-[11.5px] num" style="color:#3b4350">
+<div class="flex items-center gap-2"><span class="tag tag-blue" style="height:19px">OCR</span>a1.png「MMDP R69 OCR Alpha 2026」精确命中（conf 0.500+bbox）｜blank.png=诚实零段</div>
+<div class="flex items-center gap-2"><span class="tag tag-blue" style="height:19px">ASR</span>s1.aiff zh 转写==真值精确｜s2.aiff en 0&lt;WER≤0.5 诚实计量｜silence.wav=no_speech 空转写</div>
+<div class="flex items-center gap-2"><span class="tag tag-blue" style="height:19px">视频</span>v1.mp4 h264+AAC tracks 段+帧 OCR 前半 A/后半 B 精确｜corrupt.*=engine_error_* 如实失败</div>
+</div>
+</div>
+<div class="rounded-lg border border-[#f0f2f6] p-3">
+<div class="text-[12px] font-semibold mb-2">接入边界（如实）</div>
+<div class="space-y-1.5 text-[11.5px]" style="color:#3b4350">
+<div>· 真实接入面=<span class="num">POST /api/v1/media-assets/uploads</span>（已冻结；上传事务内 mime 路由→解析→segment）</div>
+<div>· <span class="num">MMDP_ENGINE_URL</span> 未配置 → attempted=false 存证不解析（默认关，fail-closed 语义原样）</div>
+<div>· /parse/jobs 族端点<b>未冻结</b> → 本页任务队列/重跑按钮=原型演示；PRS-01..03 维持 BACKEND_BLOCKED（CR 建议在档）</div>
+<div>· C3：无 GPU——Apple 系统框架 CPU/ANE 路径，不宣称 GPU 加速指标（test_16 同口径）</div>
+</div>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-1 xl:grid-cols-[280px_minmax(0,1fr)] gap-4">
+<section class="card overflow-hidden flex flex-col" style="max-height:760px">
+<div class="px-3 py-2.5 border-b border-[#f0f2f6] flex items-center justify-between">
+<span class="text-[13px] font-semibold">解析任务队列</span>
+<span class="tag tag-gray" id="jobCount">6</span>
+</div>
+<div class="px-3 py-2 border-b border-[#f0f2f6] flex gap-1" id="jobTabs">
+<button class="tag tag-blue" data-st="all">全部</button>
+<button class="tag tag-gray" data-st="成功">成功</button>
+<button class="tag tag-gray" data-st="失败">失败</button>
+<button class="tag tag-gray" data-st="运行中">运行中</button>
+</div>
+<div class="flex-1 overflow-y-auto scroll-thin p-2 space-y-1.5" id="jobList"></div>
+</section>
+<section class="space-y-4 min-w-0">
+<div class="card p-4">
+<div class="flex flex-wrap items-start justify-between gap-2">
+<div class="min-w-0">
+<div class="flex items-center gap-2 flex-wrap">
+<h2 class="text-[15px] font-semibold truncate" id="pTitle">张明远-知识图谱综述.pdf</h2>
+<span class="tag tag-green" id="pStatus">解析成功</span>
+<span class="tag tag-gray" id="pType">PDF · 24 页</span>
+</div>
+<div class="text-[11.5px] text-[#8a94a6] mt-1 num" id="pMeta">DOC-7721 · 引擎 PaddleOCR PP-OCRv4 + MinerU · 耗时 42.6s</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="btn btn-sm" onclick="toast('已下载结构化结果 JSON')"><iconify-icon class="text-[12px]" icon="lucide:download"></iconify-icon>下载 JSON</button>
+<button class="btn btn-sm" onclick="reparse()"><iconify-icon class="text-[12px]" icon="lucide:refresh-cw"></iconify-icon>重新解析</button>
+<a class="btn btn-sm" href="knowledge.html"><iconify-icon class="text-[12px]" icon="lucide:git-merge"></iconify-icon>进入实体关联</a>
+</div>
+</div>
+<div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+<div class="rounded-lg border border-[#f0f2f6] p-2.5"><div class="text-[11px] text-[#8a94a6]">文本块</div><div class="num text-[15px] mt-0.5" id="kBlocks">126</div></div>
+<div class="rounded-lg border border-[#f0f2f6] p-2.5"><div class="text-[11px] text-[#8a94a6]">表格 / 公式</div><div class="num text-[15px] mt-0.5" id="kTables">3 / 1</div></div>
+<div class="rounded-lg border border-[#f0f2f6] p-2.5"><div class="text-[11px] text-[#8a94a6]">平均置信度</div><div class="num text-[15px] mt-0.5 text-[#3f9c12]" id="kConf">0.94</div></div>
+<div class="rounded-lg border border-[#f0f2f6] p-2.5"><div class="text-[11px] text-[#8a94a6]">低置信块</div><div class="num text-[15px] mt-0.5 text-[#d4380d]" id="kLow">4</div></div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+<div class="card overflow-hidden">
+<div class="flex items-center justify-between px-4 py-2.5 border-b border-[#f0f2f6]">
+<span class="text-[13px] font-semibold">原文预览 · 可视化标注</span>
+<div class="flex items-center gap-2 text-[11px] text-[#5c6570]">
+<span class="flex items-center gap-1"><span class="w-2 h-2 border border-[#1677ff] bg-[#1677ff]/10"></span>高置信</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 border border-[#faad14] bg-[#faad14]/15"></span>低置信</span>
+</div>
+</div>
+<div class="p-3">
+<div class="scene h-[288px]" id="scene">
+<div class="paper" style="left:26px;top:18px;width:200px;height:250px;padding:12px">
+<div style="font-size:9px;font-weight:700;color:#1f2329;line-height:1.4">Knowledge Graph Enhanced Retrieval for Multimodal Scientific Data</div>
+<div style="font-size:6.5px;color:#8a94a6;margin-top:3px">Zhang Mingyuan, Li Si, Chen Liqun · Zhejiang University</div>
+<div style="margin-top:8px;display:flex;flex-direction:column;gap:3px">
+<span style="height:3px;background:#eef1f6;display:block;width:100%"></span>
+<span style="height:3px;background:#eef1f6;display:block;width:94%"></span>
+<span style="height:3px;background:#eef1f6;display:block;width:98%"></span>
+<span style="height:3px;background:#eef1f6;display:block;width:86%"></span>
+<span style="height:3px;background:#eef1f6;display:block;width:92%"></span>
+</div>
+<div style="display:flex;gap:4px;margin-top:8px">
+<div style="flex:1;height:48px;background:#f2f7ff;border:1px solid #dbe8ff;border-radius:2px"></div>
+<div style="flex:1;height:48px;background:#f7f9fc;border:1px solid #e6eaf0;border-radius:2px"></div>
+</div>
+<div style="margin-top:8px;display:flex;flex-direction:column;gap:3px">
+<span style="height:3px;background:#eef1f6;display:block;width:96%"></span>
+<span style="height:3px;background:#eef1f6;display:block;width:88%"></span>
+<span style="height:3px;background:#eef1f6;display:block;width:92%"></span>
+</div>
+</div>
+<div class="bbox" style="left:38px;top:30px;width:176px;height:22px"><span class="bbox-tag">标题</span></div>
+<div class="bbox" style="left:38px;top:56px;width:120px;height:10px"><span class="bbox-tag">作者</span></div>
+<div class="bbox" style="left:38px;top:104px;width:176px;height:34px"><span class="bbox-tag">摘要</span></div>
+<div class="bbox warn" style="left:38px;top:150px;width:80px;height:52px"><span class="bbox-tag">图表 0.71</span></div>
+<div class="bbox" style="left:38px;top:212px;width:176px;height:22px"><span class="bbox-tag">正文</span></div>
+<div class="absolute" style="left:248px;top:18px;right:16px;bottom:18px;background:#fff;border-radius:6px;padding:10px;box-shadow:0 6px 16px rgba(15,35,70,.1);font-size:9.5px;color:#5c6570;line-height:1.65">
+<div class="flex items-center justify-between mb-1"><span style="font-size:9px;color:#8a94a6">结构化字段</span><span style="background:#eaf2ff;color:#1677ff;border-radius:3px;padding:0 4px;font-size:8px">JSON</span></div>
+<div><span style="color:#8a94a6">title:</span> Knowledge Graph…</div>
+<div><span style="color:#8a94a6">authors:</span> ["张明远", "李思"]</div>
+<div><span style="color:#8a94a6">year:</span> 2025</div>
+<div><span style="color:#8a94a6">doi:</span> 10.1109/TKDE.2025.09</div>
+<div><span style="color:#8a94a6">keywords:</span> ["KG", "多模态"]</div>
+<div class="mt-1 pt-1" style="border-top:1px dashed #e6eaf0"><span style="color:#c77c00">⚠ 图表标题缺失，置信度 0.71</span></div>
+<div style="color:#c77c00">建议人工补录或重跑 OCR</div>
+</div>
+</div>
+</div>
+</div>
+<div class="card overflow-hidden flex flex-col">
+<div class="flex items-center justify-between px-4 py-2.5 border-b border-[#f0f2f6]">
+<div class="flex items-center gap-2"><span class="text-[13px] font-semibold">解析结果块</span><span class="tag tag-gray" id="blockCount">7</span></div>
+<label class="flex items-center gap-1.5 text-[11.5px] text-[#5c6570]"><input class="accent-[#1677ff]" id="onlyLow" type="checkbox"/>只看低置信</label>
+</div>
+<div class="p-3 space-y-2 overflow-y-auto scroll-thin" id="blockList" style="max-height:330px"></div>
+<div class="px-4 py-2 border-t border-[#f0f2f6] text-[11px] text-[#8a94a6] flex items-center gap-1.5">
+<iconify-icon class="text-[12px]" icon="lucide:info"></iconify-icon>低置信块已自动生成人工审核工单
+              <a class="link ml-auto" href="quality.html#review">查看审核队列</a>
+</div>
+</div>
+</div>
+<div class="card overflow-hidden">
+<div class="flex items-center justify-between px-4 py-2.5 border-b border-[#f0f2f6]">
+<span class="text-[13px] font-semibold">解析产物结构</span>
+<button class="btn btn-sm" onclick="toast('JSON 路径已复制：properties.extraction')"><iconify-icon class="text-[12px]" icon="lucide:copy"></iconify-icon>复制 Schema 路径</button>
+</div>
+<pre class="m-0 p-4 bg-[#0f172a] text-[#cbd5e1] text-[11.5px] leading-6 overflow-auto scroll-thin" style="max-height:240px;font-family:ui-monospace,Menlo,Consolas,monospace">{
+  <span style="color:#7dd3fc">"doc_id"</span>: "DOC-7721",
+  <span style="color:#7dd3fc">"modality"</span>: "pdf",
+  <span style="color:#7dd3fc">"engine"</span>: { "ocr": "ppocr-v4", "layout": "mineru-2.0" },
+  <span style="color:#7dd3fc">"properties"</span>: {
+    <span style="color:#7dd3fc">"extraction"</span>: {
+      "title": "Knowledge Graph Enhanced Retrieval for Multimodal Scientific Data",
+      "authors": ["张明远", "李思", "陈立群"],
+      "affiliation": "Zhejiang University",
+      "doi": "10.1109/TKDE.2025.0931",
+      "year": 2025,
+      "keywords": ["knowledge graph", "multimodal", "retrieval"]
+    }
+  },
+  <span style="color:#7dd3fc">"blocks"</span>: [ ... 126 items ],
+  <span style="color:#7dd3fc">"quality"</span>: { "avg_confidence": 0.94, "low_conf_blocks": 4, "needs_review": <span style="color:#fca5a5">true</span> }
+}</pre>
+</div>
+</section>
+</div>
+</main>
+</div>
+<div class="mask" id="mask" onclick="closeSearch()"></div>
+<div class="card" id="searchDlg" style="position:fixed;z-index:100;left:50%;top:16%;transform:translateX(-50%);width:640px;max-width:94vw;display:none;overflow:hidden;box-shadow:0 24px 64px rgba(15,23,42,.22)">
+<div class="flex items-center gap-2 px-4 h-12 border-b border-[#e6eaf0]">
+<iconify-icon class="text-[16px] text-[#8a94a6]" icon="lucide:search"></iconify-icon>
+<input autocomplete="off" class="flex-1 h-full text-[14px] outline-none bg-transparent" id="gsInput" placeholder="输入教师姓名直接发起数据流水线"/>
+<kbd class="text-[11px] border border-[#e0e5ee] rounded px-1.5 py-0.5 text-[#8a94a6]">ESC</kbd>
+</div>
+<div class="p-3"><p class="px-2 py-1 text-[11px] text-[#8a94a6]">教师 · 点击直接启动全流程</p><div class="space-y-1" id="gsTeachers"></div></div>
+</div>
+<div class="toast" id="toast"><iconify-icon class="text-[15px] text-[#73d13d]" icon="lucide:check-circle-2"></iconify-icon><span id="toastText">操作成功</span></div>
+<script>
+/* ================= MOCK（MOCK） ================= */
+const MOCK_TEACHERS = [
+  { name: '张明远', title: '教授', dept: '计算机科学与技术学院', uni: '浙江大学' },
+  { name: '陈立群', title: '副教授', dept: '材料科学与工程学院', uni: '浙江大学' },
+  { name: '王慧敏', title: '教授', dept: '医学院', uni: '上海交通大学' },
+  { name: '刘志强', title: '副教授', dept: '经济学院', uni: '复旦大学' }
+];
+const JOBS = [
+  {
+    id: 'DOC-7721', title: '张明远-知识图谱综述.pdf', status: '成功', type: 'PDF · 24 页', engine: 'PaddleOCR PP-OCRv4 + MinerU', cost: '42.6s',
+    stats: { blocks: 126, tables: '3 / 1', conf: 0.94, low: 4 },
+    blocks: [
+      { type: '标题', text: 'Knowledge Graph Enhanced Retrieval for Multimodal Scientific Data', conf: 0.98 },
+      { type: '作者', text: 'Zhang Mingyuan, Li Si, Chen Liqun — Zhejiang University', conf: 0.96 },
+      { type: '摘要', text: 'This paper proposes a unified retrieval framework that aligns textual abstracts with figure and table evidence extracted from scientific PDFs…', conf: 0.95 },
+      { type: '图表标题', text: 'Fig. 3 Multimodal alignment architecture (caption partially cropped)', conf: 0.71, low: true },
+      { type: '表格', text: 'Table 2 — Comparison of retrieval recall on SciMM benchmark', conf: 0.88 },
+      { type: '正文', text: 'We construct a multimodal knowledge graph with 1.28M entities and 3.12M relations…', conf: 0.93 },
+      { type: '公式', text: 'R(q, d) = α · sim(q, d_t) + (1 − α) · sim(q, d_v)', conf: 0.69, low: true }
+    ]
+  },
+  {
+    id: 'DOC-7730', title: '临床路径访谈记录.mp3', status: '失败', type: '音频 · 38 分钟', engine: 'Whisper large-v3', cost: '128.4s',
+    stats: { blocks: 0, tables: '0 / 0', conf: 0.58, low: 12 },
+    blocks: [
+      { type: 'ASR 片段', text: '（背景噪声过高，语音分离失败）', conf: 0.41, low: true, bad: true },
+      { type: 'ASR 片段', text: '受试者：术后第三天…主要指标恢复情况稳定，', conf: 0.62, low: true },
+      { type: 'ASR 片段', text: '（无法识别的临床术语，疑似「低分子肝素」）', conf: 0.55, low: true, bad: true }
+    ]
+  },
+  {
+    id: 'DOC-7729', title: '医学影像标注样本-03.png', status: '失败', type: '图片 · 1240×860', engine: 'PaddleOCR PP-OCRv4', cost: '12.1s',
+    stats: { blocks: 18, tables: '0 / 0', conf: 0.61, low: 6 },
+    blocks: [
+      { type: '标注文字', text: 'Patient 03 — 增强扫描 2026-10-22（旋转 12°）', conf: 0.63, low: true },
+      { type: '标注文字', text: '病灶区域 ROI-2，大小约 18mm', conf: 0.58, low: true, bad: true }
+    ]
+  },
+  {
+    id: 'DOC-7722', title: '组会录音-20261106.wav', status: '运行中', type: '音频 · 64 分钟', engine: 'Whisper large-v3', cost: '—',
+    stats: { blocks: 0, tables: '0 / 0', conf: null, low: 0 }, blocks: []
+  },
+  {
+    id: 'DOC-7723', title: '材料表征过程-电镜.mp4', status: '成功', type: '视频 · 12 分 30 秒', engine: 'VideoKeyframe + ASR', cost: '86.2s',
+    stats: { blocks: 64, tables: '0 / 0', conf: 0.89, low: 3 },
+    blocks: [
+      { type: '关键帧 OCR', text: 'SEM 5000× — 试样 A3 断面形貌', conf: 0.92 },
+      { type: 'ASR', text: '注意这里的晶界偏析带宽度大约在 200 纳米左右。', conf: 0.87 },
+      { type: '关键帧 OCR', text: 'EDS mapping — Fe/Cr/Mo 分布', conf: 0.83, low: true }
+    ]
+  },
+  {
+    id: 'DOC-7724', title: '刘志强-数字经济测算数据.csv', status: '成功', type: '文本 · 4,280 行', engine: 'Rule Parser', cost: '3.4s',
+    stats: { blocks: 4280, tables: '1 / 0', conf: 0.99, low: 0 },
+    blocks: [
+      { type: '表头', text: 'province, year, digital_index, gdp_per_capita, urbanization_rate', conf: 0.99 },
+      { type: '校验', text: '字段完整性 100%，数值范围校验通过', conf: 0.98 }
+    ]
+  },
+  /* ===== H04-03（R69 2026-11-19）：真实实测任务（R85 验收轮真值，非演示数据） ===== */
+  {
+    id: 'R85-OCR-01', title: 'a1.png（R69 验收样本·文字图）', status: '成功', type: '图片 · 640×200', engine: 'vision-accurate@macos-26.4（ocr-vision 1.0.0）', cost: '0.079s',
+    stats: { blocks: 1, tables: '0 / 0', conf: 0.50, low: 0 },
+    blocks: [
+      { type: 'OCR 文本块', text: 'MMDP R69 OCR Alpha 2026', conf: 0.50 },
+      { type: 'bbox', text: '{"origin":"normalized-bottom-left","x":0.15,"y":0.35,"w":0.70,"h":0.18}（归一化·随段存档）', conf: 0.50 }
+    ]
+  },
+  {
+    id: 'R85-ASR-01', title: 's1.aiff（R69 验收样本·zh 语音）', status: '成功', type: '音频 · 3.55s', engine: 'speech-ondevice@macos-26.4（asr-speech 1.0.0）', cost: '0.079s（RTF 0.022）',
+    stats: { blocks: 1, tables: '0 / 0', conf: null, low: 0 },
+    blocks: [
+      { type: 'ASR 转写', text: '多模态数据工厂验收样本第73轮（==真值精确；置信度诚实置空——端上引擎不提供）', conf: 1.00 }
+    ]
+  },
+  {
+    id: 'R85-VID-01', title: 'v1.mp4（R69 验收样本·合成视频）', status: '成功', type: '视频 · 1766ms', engine: 'avf-vision@macos-26.4（video-avf-vision 1.0.0）', cost: '0.143s（RTF 0.081）',
+    stats: { blocks: 4, tables: '0 / 0', conf: null, low: 0 },
+    blocks: [
+      { type: 'metadata', text: 'video meta: video=avc1 640x360@30.0fps; audio=aac', conf: 1.00 },
+      { type: 'video_frame', text: 'R69 VIDEO FRAME A（@0.5s 等距帧 OCR）', conf: 1.00 },
+      { type: 'video_frame', text: 'R69 VIDEO FRAME B（@1.5s；第三帧同文本经 uq 去重折叠=段级幂等）', conf: 1.00 }
+    ]
+  },
+  {
+    id: 'R85-ERR-01', title: 'corrupt.mp4（R69 负样本·截断）', status: '失败', type: '视频 · 1500B', engine: 'avf-vision@macos-26.4', cost: '—',
+    stats: { blocks: 0, tables: '0 / 0', conf: null, low: 0 },
+    blocks: [
+      { type: 'engine_error', text: 'engine_error_format（乱码字节无可解码音视频——durMs=0 分叉；attempted=true 存证不解析）', conf: 0, low: true, bad: true }
+    ]
+  }
+];
+
+/* ================= API 层（USE_MOCK 开关） ================= */
+const USE_MOCK = true;
+const API_BASE = '/api/v1'; // TODO: 接入真实解析服务
+async function request(path, options) {
+  const opt = options || {};
+  if (USE_MOCK) return new Promise(function (r) { setTimeout(function () { r({ code: 0, data: JOBS }); }, 160); });
+  const res = await fetch(API_BASE + path, { method: opt.method || 'GET', headers: { 'Content-Type': 'application/json' }, body: opt.body ? JSON.stringify(opt.body) : undefined });
+  if (!res.ok) throw new Error('接口异常：' + res.status);
+  return res.json();
+}
+const Api = {
+  listJobs: function (params) { return request('/parse/jobs', { params: params }); },
+  getResult: function (id) { return request('/parse/jobs/' + id + '/result'); },
+  reparse: function (id, body) { return request('/parse/jobs/' + id + '/reparse', { method: 'POST', body: body }); }
+};
+
+/* ================= 通用 ================= */
+const DF_KEY = 'df_state_v1';
+function dfState() {
+  try { return Object.assign({ pendingReview: 12, notifications: 3 }, JSON.parse(localStorage.getItem(DF_KEY) || '{}')); }
+  catch (e) { return { pendingReview: 12, notifications: 3 }; }
+}
+function setBadges() {
+  const s = dfState();
+  document.querySelectorAll('[data-badge="pendingReview"]').forEach(function (el) { el.textContent = s.pendingReview; });
+  const dot = document.getElementById('bellDot'); if (dot) dot.textContent = s.notifications;
+}
+function toast(msg) {
+  const el = document.getElementById('toast');
+  document.getElementById('toastText').textContent = msg;
+  el.classList.add('show');
+  clearTimeout(window.__tt);
+  window.__tt = setTimeout(function () { el.classList.remove('show'); }, 2400);
+}
+const statusTag = { '成功': 'tag-green', '失败': 'tag-red', '运行中': 'tag-blue', '排队': 'tag-gray' };
+
+let activeJob = 0;
+let jobFilter = 'all';
+
+function renderJobs() {
+  const box = document.getElementById('jobList');
+  const list = JOBS.filter(function (j) { return jobFilter === 'all' || j.status === jobFilter; });
+  box.innerHTML = '';
+  list.forEach(function (j) {
+    const idx = JOBS.indexOf(j);
+    const b = document.createElement('button');
+    b.className = 'job' + (idx === activeJob ? ' on' : '');
+    b.onclick = function () { selectJob(idx); };
+    b.innerHTML = '<div class="flex items-center gap-1.5"><span class="text-[12px] font-medium truncate flex-1" title="' + j.title + '">' + j.title + '</span>' +
+      '<span class="tag ' + statusTag[j.status] + '">' + j.status + '</span></div>' +
+      '<div class="text-[10.5px] text-[#8a94a6] mt-1 num">' + j.id + ' · ' + j.type + '</div>' +
+      '<div class="flex items-center gap-2 mt-1.5"><div class="bar flex-1"><span style="width:' + (j.status === '成功' ? 100 : j.status === '失败' ? 100 : 46) + '%;background:' + (j.status === '成功' ? '#52c41a' : j.status === '失败' ? '#ff4d4f' : '#1677ff') + '"></span></div>' +
+      '<span class="text-[10.5px] text-[#8a94a6] num">' + (j.stats.conf ? 'conf ' + j.stats.conf.toFixed(2) : j.status) + '</span></div>';
+    box.appendChild(b);
+  });
+  document.getElementById('jobCount').textContent = list.length;
+  if (!list.length) box.innerHTML = '<div class="text-center text-[12px] text-[#8a94a6] py-8">该状态下暂无任务</div>';
+}
+document.querySelectorAll('#jobTabs button').forEach(function (b) {
+  b.addEventListener('click', function () {
+    document.querySelectorAll('#jobTabs button').forEach(function (x) { x.className = 'tag tag-gray'; });
+    b.className = 'tag tag-blue';
+    jobFilter = b.getAttribute('data-st');
+    renderJobs();
+  });
+});
+function selectJob(i) {
+  activeJob = i;
+  const j = JOBS[i];
+  document.getElementById('pTitle').textContent = j.title;
+  const st = document.getElementById('pStatus');
+  st.textContent = j.status === '成功' ? '解析成功' : (j.status === '失败' ? '解析失败' : '解析中');
+  st.className = 'tag ' + statusTag[j.status];
+  document.getElementById('pType').textContent = j.type;
+  document.getElementById('pMeta').textContent = j.id + ' · 引擎 ' + j.engine + ' · 耗时 ' + j.cost;
+  document.getElementById('kBlocks').textContent = j.stats.blocks;
+  document.getElementById('kTables').textContent = j.stats.tables;
+  document.getElementById('kConf').textContent = j.stats.conf ? j.stats.conf.toFixed(2) : '—';
+  document.getElementById('kLow').textContent = j.stats.low;
+  renderBlocks();
+  renderJobs();
+}
+function renderBlocks() {
+  const j = JOBS[activeJob];
+  const onlyLow = document.getElementById('onlyLow').checked;
+  const box = document.getElementById('blockList');
+  box.innerHTML = '';
+  const blocks = j.blocks.filter(function (b) { return !onlyLow || b.low; });
+  if (!blocks.length) {
+    box.innerHTML = '<div class="text-center text-[12px] text-[#8a94a6] py-10">' + (j.status === '运行中' ? '解析进行中，结果块生成后将实时展示' : '暂无符合条件的解析块') + '</div>';
+    document.getElementById('blockCount').textContent = '0';
+    return;
+  }
+  blocks.forEach(function (b) {
+    const d = document.createElement('div');
+    d.className = 'block' + (b.bad ? ' bad' : (b.low ? ' low' : ''));
+    const confColor = b.conf >= 0.9 ? '#3f9c12' : (b.conf >= 0.75 ? '#c77c00' : '#d4380d');
+    d.innerHTML = '<div class="flex items-center gap-2 mb-1"><span class="tag tag-gray" style="height:19px">' + b.type + '</span>' +
+      '<span class="ml-auto num text-[11px]" style="color:' + confColor + '">置信度 ' + b.conf.toFixed(2) + '</span>' +
+      (b.low ? '<button class="text-[11px] link" onclick="toast(\'已将该块加入人工审核工单\')">转人工</button>' : '') + '</div>' +
+      '<div class="text-[#3b4350]">' + b.text + '</div>';
+    box.appendChild(d);
+  });
+  document.getElementById('blockCount').textContent = blocks.length;
+}
+document.getElementById('onlyLow').addEventListener('change', renderBlocks);
+function reparse() {
+  const j = JOBS[activeJob];
+  j.status = '运行中';
+  j.stats.conf = null;
+  toast('已重新提交解析任务：' + j.id);
+  renderJobs();
+  selectJob(activeJob);
+  setTimeout(function () {
+    j.status = '成功';
+    j.stats.conf = 0.96;
+    j.cost = '39.8s';
+    toast('重新解析完成，低置信块已减少');
+    renderJobs();
+    selectJob(activeJob);
+  }, 2600);
+}
+function requeueAll() {
+  JOBS.forEach(function (j) { if (j.status === '失败') j.status = '成功'; });
+  renderJobs();
+  selectJob(activeJob);
+  toast('失败任务已全部重跑，2 个任务恢复成功');
+}
+
+/* ================= 搜索（统一入口） ================= */
+function openSearch() {
+  document.getElementById('mask').classList.add('open');
+  const d = document.getElementById('searchDlg');
+  d.style.display = 'block';
+  const input = document.getElementById('gsInput');
+  input.value = ''; renderTeachers('');
+  setTimeout(function () { input.focus(); }, 30);
+}
+function closeSearch() {
+  document.getElementById('mask').classList.remove('open');
+  document.getElementById('searchDlg').style.display = 'none';
+}
+function renderTeachers(kw) {
+  const box = document.getElementById('gsTeachers');
+  const list = MOCK_TEACHERS.filter(function (t) { return !kw || t.name.indexOf(kw) >= 0 || t.dept.indexOf(kw) >= 0; });
+  box.innerHTML = '';
+  list.forEach(function (t) {
+    const b = document.createElement('button');
+    b.className = 'w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-[#f2f7ff] text-left';
+    b.onclick = function () { launchTeacher(t.name); };
+    b.innerHTML = '<span class="w-8 h-8 rounded-lg bg-[#eaf2ff] text-[#1677ff] grid place-items-center text-[12px] font-semibold">' + t.name.slice(0, 1) + '</span>' +
+      '<span><span class="block text-[13px] font-medium">' + t.name + ' · ' + t.title + '</span><span class="block text-[11.5px] text-[#8a94a6]">' + t.uni + ' · ' + t.dept + '</span></span>' +
+      '<span class="ml-auto tag tag-blue">启动流水线</span>';
+    box.appendChild(b);
+  });
+  if (!list.length) box.innerHTML = '<div class="px-2 py-6 text-center text-[12px] text-[#8a94a6]">未找到匹配教师</div>';
+}
+function launchTeacher(name) {
+  const s = Object.assign(dfState(), { lastRun: { id: 'DF-RUN-20261108-014', teacher: name, status: 'running', progress: 0, startedAt: '2026-11-08 13:20' } });
+  localStorage.setItem(DF_KEY, JSON.stringify(s));
+  location.href = 'run.html?teacher=' + encodeURIComponent(name) + '&auto=1';
+}
+document.getElementById('gsBtn').addEventListener('click', openSearch);
+document.getElementById('gsInput').addEventListener('input', function (e) { renderTeachers(e.target.value.trim()); });
+document.getElementById('gsInput').addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.value.trim()) launchTeacher(e.target.value.trim()); });
+document.addEventListener('keydown', function (e) {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openSearch(); }
+  if (e.key === 'Escape') closeSearch();
+});
+document.getElementById('bellBtn').addEventListener('click', function () { toast('3 条未读通知：解析超时 / 数据源中断 / 低置信度待审'); });
+
+setBadges();
+renderJobs();
+selectJob(0);
+</script>
+</body>
+</html>

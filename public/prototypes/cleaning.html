@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>清洗与标准化 · 多模态数据工厂</title>
+<script src="../assets/js/tailwindcss.js"></script>
+<script src="../assets/js/iconify-icon.min.js"></script>
+<style>
+  :root{--primary:#1677ff;--primary-weak:#eaf2ff;--success:#52c41a;--warning:#faad14;--error:#ff4d4f;--text:#1f2329;--text-2:#5c6570;--text-3:#8a94a6;--line:#e6eaf0;--bg:#f5f7fa}
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+  a{color:inherit;text-decoration:none} button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  iconify-icon{display:inline-flex;align-items:center;justify-content:center}
+  .num{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .card{background:#fff;border:1px solid var(--line);border-radius:10px}
+  .tb-ico{display:grid;place-items:center;width:32px;height:32px;border-radius:7px;color:#5c6570}
+  .tb-ico:hover{background:#f2f5fa;color:#1677ff}
+  .nav-group{padding:14px 10px 6px;font-size:11px;letter-spacing:.08em;color:#9aa3b2;font-weight:600}
+  .nav-item{display:flex;align-items:center;gap:9px;height:36px;padding:0 10px;border-radius:7px;color:#4a5361;margin-bottom:2px;font-size:13px}
+  .nav-item:hover{background:#f4f7fb;color:#1677ff}
+  .nav-item iconify-icon{font-size:16px;color:#7b8494;flex:none}
+  .nav-item.active{background:var(--primary-weak);color:var(--primary);font-weight:600}
+  .nav-item.active iconify-icon{color:var(--primary)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 12px;border-radius:7px;border:1px solid var(--line);background:#fff;font-size:13px;color:var(--text);transition:.15s;white-space:nowrap}
+  .btn:hover{border-color:#1677ff;color:#1677ff}
+  .btn-primary{background:var(--primary);border-color:var(--primary);color:#fff}
+  .btn-primary:hover{background:#4096ff;border-color:#4096ff;color:#fff}
+  .btn-sm{height:28px;padding:0 9px;font-size:12px}
+  .inp{height:32px;border:1px solid var(--line);border-radius:7px;padding:0 10px;font-size:13px;background:#fff;color:var(--text);outline:none;width:100%}
+  .inp:focus{border-color:#1677ff;box-shadow:0 0 0 3px rgba(22,119,255,.1)}
+  .tag{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 7px;border-radius:5px;font-size:12px;line-height:1;border:1px solid transparent;white-space:nowrap}
+  .tag-blue{background:#eaf2ff;border-color:#c9ddff;color:#1677ff}
+  .tag-green{background:#f0fbe9;border-color:#cdebb8;color:#3f9c12}
+  .tag-orange{background:#fff8e8;border-color:#ffe1a8;color:#c77c00}
+  .tag-red{background:#fff1f0;border-color:#ffccc7;color:#d4380d}
+  .tag-gray{background:#f4f6f9;border-color:#e3e8ef;color:#5c6570}
+  .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+  .tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
+  .tbl th{height:38px;padding:0 10px;text-align:left;font-weight:500;color:var(--text-3);background:#fafbfd;border-bottom:1px solid var(--line);font-size:11.5px;white-space:nowrap}
+  .tbl td{height:44px;padding:0 10px;border-bottom:1px solid #f0f2f6;vertical-align:middle}
+  .tbl tbody tr:hover{background:#f8fbff}
+  .mask{position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:80;display:none}
+  .mask.open{display:block}
+  .dlg{position:fixed;z-index:100;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;box-shadow:0 24px 64px rgba(15,23,42,.22);width:560px;max-width:94vw;max-height:88vh;display:none;flex-direction:column;overflow:hidden}
+  .dlg.open{display:flex}
+  .toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-10px);z-index:120;background:#1f2329;color:#fff;font-size:13px;padding:9px 16px;border-radius:8px;opacity:0;transition:.2s;pointer-events:none;display:flex;align-items:center;gap:7px}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .scroll-none{scrollbar-width:none} .scroll-none::-webkit-scrollbar{display:none}
+  .scroll-thin{scrollbar-width:thin;scrollbar-color:#d5dbe5 transparent}
+  .scroll-thin::-webkit-scrollbar{width:6px;height:6px}
+  .scroll-thin::-webkit-scrollbar-thumb{background:#d5dbe5;border-radius:3px}
+  .link{color:#1677ff} .link:hover{text-decoration:underline}
+  .diff-old{background:#fff1f0;color:#a8071a;border-radius:3px;padding:0 3px}
+  .diff-new{background:#f0fbe9;color:#237804;border-radius:3px;padding:0 3px}
+  .map-row{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px dashed #f0f2f6;font-size:12px}
+  .arrow{color:#a7b0bf}
+  .chk{width:14px;height:14px;border-radius:3px;border:1px solid #cfd6e2;appearance:none;background:#fff;cursor:pointer;position:relative;flex:none}
+  .chk:checked{background:#1677ff;border-color:#1677ff}
+  .chk:checked::after{content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+</style>
+</head>
+<body>
+<header class="h-14 bg-white border-b border-[#e6eaf0] flex items-center gap-3 px-4 sticky top-0 z-40">
+<a class="flex items-center gap-2.5 pr-2 min-w-[208px]" href="home.html">
+<span class="w-7 h-7 rounded-[8px] bg-[#1677ff] text-white grid place-items-center text-[12px] font-bold">DF</span>
+<span class="text-[15px] font-semibold whitespace-nowrap">多模态数据工厂</span>
+<span class="text-[10px] leading-4 px-1 rounded bg-[#eef4ff] text-[#1677ff] border border-[#cfe0ff]">ENT</span>
+</a>
+<button class="hidden lg:flex items-center gap-2 h-8 px-2.5 rounded-md border border-[#e6eaf0] text-[12.5px] hover:bg-[#f7f9fc] whitespace-nowrap">
+<iconify-icon class="text-[14px] text-[#5c6570]" icon="lucide:layers"></iconify-icon><span>高校科研数据空间</span>
+<iconify-icon class="text-[12px] text-[#8a94a6]" icon="lucide:chevron-down"></iconify-icon>
+</button>
+<div class="flex-1 min-w-0 flex justify-center px-2">
+<button class="w-full max-w-[440px] h-9 flex items-center gap-2 px-3 rounded-lg bg-[#f5f7fa] border border-[#e6eaf0] text-[13px] text-[#8a94a6] hover:border-[#1677ff] hover:bg-white" id="gsBtn">
+<iconify-icon class="text-[15px]" icon="lucide:search"></iconify-icon><span class="truncate">搜索教师、任务、数据源，或输入指令</span>
+<kbd class="ml-auto text-[11px] border border-[#e0e5ee] rounded px-1.5 py-0.5 bg-white">⌘K</kbd>
+</button>
+</div>
+<button class="tb-ico"><iconify-icon class="text-[17px]" icon="lucide:circle-help"></iconify-icon></button>
+<button class="tb-ico relative" id="bellBtn">
+<iconify-icon class="text-[17px]" icon="lucide:bell"></iconify-icon>
+<span class="absolute top-1 right-1 min-w-[15px] h-[15px] px-1 rounded-full bg-[#ff4d4f] text-white text-[10px] leading-[15px] text-center num" id="bellDot">3</span>
+</button>
+<div class="flex items-center gap-2 pl-3 border-l border-[#e6eaf0]">
+<span class="w-7 h-7 rounded-full bg-[#eaf2ff] text-[#1677ff] grid place-items-center text-[12px] font-semibold">李</span>
+<div class="hidden xl:block leading-tight"><div class="text-[12.5px]">李思远</div><div class="text-[11px] text-[#8a94a6]">平台管理员</div></div>
+<iconify-icon class="text-[12px] text-[#8a94a6]" icon="lucide:chevron-down"></iconify-icon>
+</div>
+</header>
+<div class="flex items-start">
+<aside class="w-[224px] shrink-0 bg-white border-r border-[#e6eaf0] h-[calc(100vh-56px)] sticky top-14 hidden md:flex flex-col">
+<div class="p-3 pb-1"><a class="btn btn-primary w-full" href="create.html"><iconify-icon class="text-[15px]" icon="lucide:plus"></iconify-icon>新建数据流水线</a></div>
+<nav class="flex-1 overflow-y-auto scroll-thin px-2 pb-3">
+<p class="nav-group">数据接入</p>
+<a class="nav-item" href="home.html"><iconify-icon icon="lucide:layout-dashboard"></iconify-icon>数据工厂总览</a>
+<a class="nav-item" href="sources.html"><iconify-icon icon="lucide:plug"></iconify-icon>数据源与连接器</a>
+<a class="nav-item" href="tasks.html"><iconify-icon icon="lucide:list-tree"></iconify-icon>采集任务管理<span class="ml-auto text-[11px] num px-1.5 rounded bg-[#fff7e6] text-[#c77c00]">3</span></a>
+<p class="nav-group">处理加工</p>
+<a class="nav-item" href="raw-data.html"><iconify-icon icon="lucide:folder-open"></iconify-icon>原始数据管理</a>
+<a class="nav-item" href="parsing.html"><iconify-icon icon="lucide:scan-text"></iconify-icon>多模态解析</a>
+<a class="nav-item active" href="cleaning.html"><iconify-icon icon="lucide:filter"></iconify-icon>清洗与标准化</a>
+<p class="nav-group">知识治理</p>
+<a class="nav-item" href="knowledge.html"><iconify-icon icon="lucide:share-2"></iconify-icon>实体与知识关联</a>
+<p class="nav-group">质量交付</p>
+<a class="nav-item" href="quality.html"><iconify-icon icon="lucide:shield-check"></iconify-icon>数据质量与审核<span class="ml-auto text-[11px] num px-1.5 rounded bg-[#fff1f0] text-[#d4380d]" data-badge="pendingReview">12</span></a>
+<a class="nav-item" href="assets.html"><iconify-icon icon="lucide:package-check"></iconify-icon>数据资产与交付</a>
+<p class="nav-group">系统</p>
+<a class="nav-item" href="system.html"><iconify-icon icon="lucide:settings"></iconify-icon>系统管理与监控</a>
+</nav>
+<div class="border-t border-[#e6eaf0] px-3 py-2.5 text-[11px] text-[#8a94a6] flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-[#52c41a]"></span>调度集群正常 · 4/4 在线</div>
+</aside>
+<main class="flex-1 min-w-0 p-4 lg:p-6">
+<div class="flex flex-wrap items-end justify-between gap-3 mb-4">
+<div>
+<nav class="flex items-center gap-1.5 text-[12px] text-[#8a94a6] mb-1.5">
+<span>工作空间</span><iconify-icon class="text-[11px]" icon="lucide:chevron-right"></iconify-icon>
+<span>处理加工</span><iconify-icon class="text-[11px]" icon="lucide:chevron-right"></iconify-icon>
+<span class="text-[#5c6570]">清洗与标准化</span>
+</nav>
+<h1 class="text-[20px] font-semibold leading-7">清洗与标准化</h1>
+<p class="text-[12px] text-[#8a94a6] mt-1">字段映射、去重、格式归一与缺失值处理，输出符合 research_profile_v3 的规范数据</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="btn" onclick="toast('清洗规则集已导出为 YAML')"><iconify-icon class="text-[14px]" icon="lucide:file-code"></iconify-icon>导出规则</button>
+<button class="btn" onclick="runClean()"><iconify-icon class="text-[14px]" icon="lucide:play"></iconify-icon>试运行</button>
+<button class="btn btn-primary" onclick="toast('已发布为默认清洗模板，后续运行将复用')"><iconify-icon class="text-[14px]" icon="lucide:save"></iconify-icon>保存并应用</button>
+</div>
+</div>
+<div class="card px-4 py-3 mb-4 flex flex-wrap items-center gap-3">
+<span class="text-[12.5px] text-[#5c6570]">当前作业</span>
+<select class="inp" id="jobSel" style="width:250px">
+<option>CLEAN-20261108-021 · 张明远 · 128 条</option>
+<option>CLEAN-20261107-018 · 王慧敏 · 96 条（字段缺失异常）</option>
+<option>CLEAN-20261107-009 · 陈立群 · 224 条</option>
+</select>
+<span class="tag tag-orange"><span class="dot"></span>字段缺失率 2.3%</span>
+<span class="tag tag-green"><span class="dot"></span>去重完成</span>
+<div class="ml-auto flex items-center gap-2">
+<span class="text-[12px] text-[#8a94a6]">目标 Schema</span>
+<span class="tag tag-blue">research_profile_v3</span>
+</div>
+</div>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+<div class="card p-4"><div class="text-[12px] text-[#5c6570]">输入记录</div><div class="mt-1.5 num text-[26px] leading-8 font-semibold" id="inCount">128</div><div class="text-[11.5px] text-[#8a94a6] mt-1">来自 6 个数据源</div></div>
+<div class="card p-4"><div class="text-[12px] text-[#5c6570]">清洗后记录</div><div class="mt-1.5 num text-[26px] leading-8 font-semibold text-[#3f9c12]" id="outCount">124</div><div class="text-[11.5px] text-[#8a94a6] mt-1">合并重复 12 条 · 剔除 4 条</div></div>
+<div class="card p-4"><div class="text-[12px] text-[#5c6570]">字段映射覆盖</div><div class="mt-1.5 num text-[26px] leading-8 font-semibold" id="mapRate">97.2<span class="text-[13px] font-normal text-[#8a94a6]">%</span></div><div class="text-[11.5px] text-[#8a94a6] mt-1" id="mapSub">36 / 37 字段已映射</div></div>
+<div class="card p-4"><div class="text-[12px] text-[#5c6570]">待处理字段缺失</div><div class="mt-1.5 num text-[26px] leading-8 font-semibold text-[#d4380d]">3</div><div class="text-[11.5px] text-[#d4380d] mt-1">发表日期 / 作者单位</div></div>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_400px] gap-4">
+<section class="card overflow-hidden">
+<div class="flex items-center justify-between px-4 py-2.5 border-b border-[#f0f2f6]">
+<div class="flex items-center gap-2">
+<span class="text-[13px] font-semibold">清洗前后对比</span>
+<span class="tag tag-gray">抽样 3 / 128</span>
+</div>
+<div class="flex items-center gap-1.5">
+<button class="btn btn-sm" onclick="toast('已切换为表格视图')"><iconify-icon class="text-[12px]" icon="lucide:table"></iconify-icon>字段表</button>
+<button class="btn btn-sm" onclick="toast('已导出差异报告（CSV）')"><iconify-icon class="text-[12px]" icon="lucide:download"></iconify-icon>差异报告</button>
+</div>
+</div>
+<div class="p-4 space-y-3">
+<div class="rounded-lg border border-[#e6eaf0] overflow-hidden">
+<div class="grid grid-cols-2 bg-[#fafbfd] border-b border-[#e6eaf0] text-[11.5px] text-[#8a94a6]">
+<div class="px-3 py-2 border-r border-[#e6eaf0]">清洗前（原始解析结果）</div>
+<div class="px-3 py-2">清洗后（标准化）</div>
+</div>
+<div class="grid grid-cols-2 text-[12px] leading-6">
+<div class="px-3 py-3 border-r border-[#f0f2f6] space-y-1.5">
+<div><span class="text-[#8a94a6]">title:</span> Knowledge Graph Enhanced Retrieval for Multimodal Scientific Data.</div>
+<div><span class="text-[#8a94a6]">author:</span> 张明远,李思, 陈立群;</div>
+<div><span class="text-[#8a94a6]">date:</span> 2025/3/8</div>
+<div><span class="text-[#8a94a6]">affiliation:</span> 浙江大学计算机学院</div>
+<div><span class="text-[#8a94a6]">doi:</span> https://doi.org/10.1109/TKDE.2025.0931</div>
+<div><span class="text-[#8a94a6]">keywords:</span> KG MultiModal retrieval（重复 3 次）</div>
+<div><span class="text-[#8a94a6]">cited:</span> —</div>
+</div>
+<div class="px-3 py-3 space-y-1.5">
+<div><span class="text-[#8a94a6]">title:</span> <span class="diff-new">Knowledge Graph Enhanced Retrieval for Multimodal Scientific Data</span></div>
+<div><span class="text-[#8a94a6]">authors:</span> <span class="diff-new">["张明远","李思","陈立群"]</span></div>
+<div><span class="text-[#8a94a6]">publish_date:</span> <span class="diff-new">2025-03-08</span></div>
+<div><span class="text-[#8a94a6]">affiliation:</span> <span class="diff-new">浙江大学 · 计算机科学与技术学院</span></div>
+<div><span class="text-[#8a94a6]">doi:</span> <span class="diff-new">10.1109/TKDE.2025.0931</span></div>
+<div><span class="text-[#8a94a6]">keywords:</span> <span class="diff-new">["知识图谱","多模态","检索"]</span></div>
+<div><span class="text-[#8a94a6]">cited_by:</span> <span class="diff-old">null（字段缺失）</span></div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11.5px]">
+<div class="rounded-md bg-[#f8fbff] border border-[#e3efff] px-2 py-1.5"><span class="text-[#8a94a6]">格式归一</span><div class="num text-[12.5px] text-[#1677ff]">28 处</div></div>
+<div class="rounded-md bg-[#f7fdf2] border border-[#e0f2d3] px-2 py-1.5"><span class="text-[#8a94a6]">去重合并</span><div class="num text-[12.5px] text-[#3f9c12]">12 条</div></div>
+<div class="rounded-md bg-[#fffbf2] border border-[#ffe7c2] px-2 py-1.5"><span class="text-[#8a94a6]">缺失回填</span><div class="num text-[12.5px] text-[#c77c00]">8 条</div></div>
+<div class="rounded-md bg-[#fff8f7] border border-[#ffdedb] px-2 py-1.5"><span class="text-[#8a94a6]">仍缺失</span><div class="num text-[12.5px] text-[#d4380d]">3 个字段</div></div>
+</div>
+</div>
+<div class="px-4 pb-3">
+<div class="text-[12px] font-medium mb-2">处理明细</div>
+<div class="overflow-x-auto scroll-none">
+<table class="tbl" style="min-width:620px">
+<thead><tr><th>规则</th><th style="width:90px">影响记录</th><th style="width:84px">状态</th><th style="width:110px">最近执行</th></tr></thead>
+<tbody id="ruleBody">
+<tr><td>标题去除尾部标点并压缩空白</td><td class="num">64</td><td><span class="tag tag-green">成功</span></td><td class="num text-[11.5px] text-[#8a94a6]">13:04:02</td></tr>
+<tr><td>作者字段拆分为标准数组</td><td class="num">128</td><td><span class="tag tag-green">成功</span></td><td class="num text-[11.5px] text-[#8a94a6]">13:04:05</td></tr>
+<tr><td>日期归一为 ISO-8601</td><td class="num">96</td><td><span class="tag tag-green">成功</span></td><td class="num text-[11.5px] text-[#8a94a6]">13:04:07</td></tr>
+<tr><td>机构名称对齐学校标准名录</td><td class="num">72</td><td><span class="tag tag-green">成功</span></td><td class="num text-[11.5px] text-[#8a94a6]">13:04:09</td></tr>
+<tr><td>DOI 规范化并校验格式</td><td class="num">118</td><td><span class="tag tag-orange">部分缺失</span></td><td class="num text-[11.5px] text-[#8a94a6]">13:04:11</td></tr>
+<tr><td>按 DOI + 标题去重合并</td><td class="num">12</td><td><span class="tag tag-green">成功</span></td><td class="num text-[11.5px] text-[#8a94a6]">13:04:14</td></tr>
+<tr><td>发表日期缺失回填（来源交叉比对）</td><td class="num">8</td><td><span class="tag tag-orange">待确认</span></td><td class="num text-[11.5px] text-[#8a94a6]">13:04:16</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<aside class="space-y-4 min-w-0">
+<section class="card p-4">
+<div class="flex items-center justify-between mb-2">
+<h2 class="text-[13.5px] font-semibold">字段映射</h2>
+<button class="btn btn-sm" onclick="openMap()"><iconify-icon class="text-[12px]" icon="lucide:plus"></iconify-icon>新增映射</button>
+</div>
+<p class="text-[11.5px] text-[#8a94a6] mb-2">源字段 → 目标 Schema research_profile_v3</p>
+<div class="max-h-[268px] overflow-y-auto scroll-thin pr-1" id="mapList">
+<div class="map-row"><span class="tag tag-gray num" style="height:20px">title</span><span class="arrow">→</span><span class="tag tag-blue" style="height:20px">title</span><span class="ml-auto text-[11px] text-[#3f9c12]">直接映射</span></div>
+<div class="map-row"><span class="tag tag-gray num" style="height:20px">author</span><span class="arrow">→</span><span class="tag tag-blue" style="height:20px">authors[]</span><span class="ml-auto text-[11px] text-[#c77c00]">拆分</span></div>
+<div class="map-row"><span class="tag tag-gray num" style="height:20px">date</span><span class="arrow">→</span><span class="tag tag-blue" style="height:20px">publish_date</span><span class="ml-auto text-[11px] text-[#c77c00]">格式转换</span></div>
+<div class="map-row"><span class="tag tag-gray num" style="height:20px">affiliation</span><span class="arrow">→</span><span class="tag tag-blue" style="height:20px">affiliation</span><span class="ml-auto text-[11px] text-[#3f9c12]">字典对齐</span></div>
+<div class="map-row"><span class="tag tag-gray num" style="height:20px">doi_url</span><span class="arrow">→</span><span class="tag tag-blue" style="height:20px">doi</span><span class="ml-auto text-[11px] text-[#3f9c12]">正则提取</span></div>
+<div class="map-row"><span class="tag tag-gray num" style="height:20px">kw</span><span class="arrow">→</span><span class="tag tag-blue" style="height:20px">keywords[]</span><span class="ml-auto text-[11px] text-[#c77c00]">去重</span></div>
+<div class="map-row"><span class="tag tag-gray num" style="height:20px">cited</span><span class="arrow">→</span><span class="tag tag-blue" style="height:20px">cited_by</span><span class="ml-auto text-[11px] text-[#d4380d]">缺失</span></div>
+<div class="map-row"><span class="tag tag-gray num" style="height:20px">fund</span><span class="arrow">→</span><span class="tag tag-blue" style="height:20px">funding[]</span><span class="ml-auto text-[11px] text-[#3f9c12]">直接映射</span></div>
+<div class="map-row"><span class="tag tag-gray num" style="height:20px">project_no</span><span class="arrow">→</span><span class="tag tag-blue" style="height:20px">grant_id</span><span class="ml-auto text-[11px] text-[#3f9c12]">直接映射</span></div>
+<div class="map-row" style="border-bottom:none"><span class="tag tag-gray num" style="height:20px">abstract</span><span class="arrow">→</span><span class="tag tag-blue" style="height:20px">abstract</span><span class="ml-auto text-[11px] text-[#3f9c12]">截断 800 字</span></div>
+</div>
+</section>
+<section class="card p-4">
+<div class="flex items-center justify-between mb-2"><h2 class="text-[13.5px] font-semibold">去重与转换</h2><span class="tag tag-orange">12 条被合并</span></div>
+<div class="space-y-2 text-[12px]">
+<div class="flex items-center justify-between"><span class="text-[#5c6570]">主键策略</span><span class="tag tag-gray num">doi + title_hash</span></div>
+<div class="flex items-center justify-between"><span class="text-[#5c6570]">相似度阈值</span><span class="num">0.92</span></div>
+<div class="flex items-center justify-between"><span class="text-[#5c6570]">保留策略</span><span>信息完整度优先</span></div>
+<div class="flex items-center justify-between"><span class="text-[#5c6570]">缺失值策略</span><span>交叉回填 + 标记</span></div>
+</div>
+<div class="mt-3 p-2.5 rounded-lg bg-[#fffbf2] border border-[#ffe7c2] text-[11.5px] text-[#8a6d3b] leading-5">
+            检测到 3 条记录缺少「发表日期」，来源交叉比对后回填 8 条，其余 3 条已标记为存疑字段，进入人工审核。
+          </div>
+<a class="btn btn-sm w-full mt-2" href="quality.html#review">查看待审核字段</a>
+</section>
+<section class="card p-4">
+<h2 class="text-[13.5px] font-semibold mb-2">最近清洗作业</h2>
+<div class="space-y-2 text-[12px]">
+<div class="flex items-center gap-2"><span class="tag tag-green">完成</span><span class="truncate">CLEAN-20261108-021</span><span class="ml-auto text-[#8a94a6] num">13:04</span></div>
+<div class="flex items-center gap-2"><span class="tag tag-red">异常</span><span class="truncate">CLEAN-20261107-018</span><span class="ml-auto text-[#8a94a6] num">昨日</span></div>
+<div class="flex items-center gap-2"><span class="tag tag-green">完成</span><span class="truncate">CLEAN-20261107-009</span><span class="ml-auto text-[#8a94a6] num">昨日</span></div>
+</div>
+</section>
+</aside>
+</div>
+</main>
+</div>
+<div class="mask" id="mask" onclick="closeMap()"></div>
+<div class="dlg" id="mapDlg">
+<div class="flex items-center justify-between px-5 h-14 border-b border-[#e6eaf0]">
+<div class="text-[15px] font-semibold">新增字段映射</div>
+<button class="tb-ico" onclick="closeMap()"><iconify-icon class="text-[16px]" icon="lucide:x"></iconify-icon></button>
+</div>
+<div class="p-5">
+<div class="grid grid-cols-2 gap-3 mb-3">
+<div><label class="text-[12px] text-[#5c6570] block mb-1">源字段</label><input class="inp" id="srcField" placeholder="如：pub_year"/></div>
+<div><label class="text-[12px] text-[#5c6570] block mb-1">目标字段</label><input class="inp" id="dstField" placeholder="如：publish_year"/></div>
+</div>
+<div class="mb-3"><label class="text-[12px] text-[#5c6570] block mb-1">转换方式</label>
+<select class="inp" id="convType"><option>直接映射</option><option>格式转换</option><option>字典对齐</option><option>正则提取</option><option>拆分数组</option></select>
+</div>
+<div><label class="text-[12px] text-[#5c6570] block mb-1">转换表达式</label><input class="inp" id="convExpr" placeholder="如：toISO8601($value)"/></div>
+<p class="hidden text-[12px] text-[#d4380d] mt-2" id="mapErr"></p>
+</div>
+<div class="px-5 py-3 border-t border-[#e6eaf0] flex justify-end gap-2">
+<button class="btn" onclick="closeMap()">取消</button>
+<button class="btn btn-primary" onclick="saveMap()">保存映射</button>
+</div>
+</div>
+<div class="mask" id="searchMask" onclick="closeSearch()"></div>
+<div class="card" id="searchDlg" style="position:fixed;z-index:100;left:50%;top:16%;transform:translateX(-50%);width:640px;max-width:94vw;display:none;overflow:hidden;box-shadow:0 24px 64px rgba(15,23,42,.22)">
+<div class="flex items-center gap-2 px-4 h-12 border-b border-[#e6eaf0]">
+<iconify-icon class="text-[16px] text-[#8a94a6]" icon="lucide:search"></iconify-icon>
+<input autocomplete="off" class="flex-1 h-full text-[14px] outline-none bg-transparent" id="gsInput" placeholder="输入教师姓名直接发起数据流水线"/>
+<kbd class="text-[11px] border border-[#e0e5ee] rounded px-1.5 py-0.5 text-[#8a94a6]">ESC</kbd>
+</div>
+<div class="p-3"><p class="px-2 py-1 text-[11px] text-[#8a94a6]">教师 · 点击直接启动全流程</p><div class="space-y-1" id="gsTeachers"></div></div>
+</div>
+<div class="toast" id="toast"><iconify-icon class="text-[15px] text-[#73d13d]" icon="lucide:check-circle-2"></iconify-icon><span id="toastText">操作成功</span></div>
+<script>
+/* ================= MOCK（MOCK） ================= */
+const MOCK_TEACHERS = [
+  { name: '张明远', title: '教授', dept: '计算机科学与技术学院', uni: '浙江大学' },
+  { name: '陈立群', title: '副教授', dept: '材料科学与工程学院', uni: '浙江大学' },
+  { name: '王慧敏', title: '教授', dept: '医学院', uni: '上海交通大学' },
+  { name: '刘志强', title: '副教授', dept: '经济学院', uni: '复旦大学' }
+];
+const MOCK_JOBS = {
+  'CLEAN-20261108-021': { input: 128, output: 124, map: '97.2', mapCount: '36 / 37', missing: 3 },
+  'CLEAN-20261107-018': { input: 96, output: 88, map: '89.4', mapCount: '33 / 37', missing: 8 },
+  'CLEAN-20261107-009': { input: 224, output: 224, map: '100', mapCount: '37 / 37', missing: 0 }
+};
+
+/* ================= API 层（USE_MOCK 开关） ================= */
+const USE_MOCK = true;
+const API_BASE = '/api/v1'; // TODO: 接入真实清洗服务
+async function request(path, options) {
+  const opt = options || {};
+  if (USE_MOCK) return new Promise(function (r) { setTimeout(function () { r({ code: 0, data: MOCK_JOBS }); }, 160); });
+  const res = await fetch(API_BASE + path, { method: opt.method || 'GET', headers: { 'Content-Type': 'application/json' }, body: opt.body ? JSON.stringify(opt.body) : undefined });
+  if (!res.ok) throw new Error('接口异常：' + res.status);
+  return res.json();
+}
+const Api = {
+  listJobs: function () { return request('/cleaning/jobs'); },
+  getPreview: function (id) { return request('/cleaning/jobs/' + id + '/preview'); },
+  updateMapping: function (body) { return request('/cleaning/mappings', { method: 'POST', body: body }); },
+  run: function (id) { return request('/cleaning/jobs/' + id + '/run', { method: 'POST' }); }
+};
+const MOCK_JOB_KEYS = Object.keys(MOCK_JOBS);
+document.getElementById('jobSel').innerHTML = MOCK_JOB_KEYS.map(function (k) { return '<option value="' + k + '">' + k + '</option>'; }).join('');
+
+/* ================= 通用 ================= */
+const DF_KEY = 'df_state_v1';
+function dfState() {
+  try { return Object.assign({ pendingReview: 12, notifications: 3 }, JSON.parse(localStorage.getItem(DF_KEY) || '{}')); }
+  catch (e) { return { pendingReview: 12, notifications: 3 }; }
+}
+function setBadges() {
+  const s = dfState();
+  document.querySelectorAll('[data-badge="pendingReview"]').forEach(function (el) { el.textContent = s.pendingReview; });
+  const dot = document.getElementById('bellDot');
+  if (dot) dot.textContent = s.notifications;
+}
+function closeAllPopups() {
+  closeSearch();
+  closeMap();
+}
+function toast(msg) {
+  const el = document.getElementById('toast');
+  document.getElementById('toastText').textContent = msg;
+  el.classList.add('show');
+  clearTimeout(window.__tt);
+  window.__tt = setTimeout(function () { el.classList.remove('show'); }, 2400);
+}
+document.getElementById('jobSel').addEventListener('change', function (e) {
+  const j = MOCK_JOBS[e.target.value];
+  if (!j) return;
+  document.getElementById('inCount').textContent = j.input;
+  document.getElementById('outCount').textContent = j.output;
+  document.getElementById('mapRate').innerHTML = j.map + '<span class="text-[13px] font-normal text-[#8a94a6]">%</span>';
+  const sub = document.getElementById('mapSub');
+  if (sub) sub.textContent = j.mapCount + ' 字段已映射';
+  toast('已切换清洗作业：' + e.target.value);
+});
+
+function runClean() {
+  toast('试运行已提交：将按当前 7 条规则对 128 条记录执行');
+  setTimeout(function () {
+    document.getElementById('outCount').textContent = '124';
+    toast('试运行完成：输出 124 条，差异报告已刷新');
+  }, 1400);
+}
+
+function openMap() {
+  document.getElementById('mask').classList.add('open');
+  document.getElementById('mapDlg').classList.add('open');
+  document.getElementById('mapErr').classList.add('hidden');
+}
+function closeMap() {
+  document.getElementById('mapDlg').classList.remove('open');
+  document.getElementById('mask').classList.remove('open');
+}
+function saveMap() {
+  const s = document.getElementById('srcField').value.trim();
+  const d = document.getElementById('dstField').value.trim();
+  if (!s || !d) {
+    const err = document.getElementById('mapErr');
+    err.textContent = '源字段与目标字段均为必填';
+    err.classList.remove('hidden');
+    return;
+  }
+  const row = document.createElement('div');
+  row.className = 'map-row';
+  row.innerHTML = '<span class="tag tag-gray num" style="height:20px">' + s + '</span><span class="arrow">→</span>' +
+    '<span class="tag tag-blue" style="height:20px">' + d + '</span><span class="ml-auto text-[11px] text-[#3f9c12]">' + document.getElementById('convType').value + '</span>';
+  document.getElementById('mapList').appendChild(row);
+  closeMap();
+  document.getElementById('srcField').value = '';
+  document.getElementById('dstField').value = '';
+  toast('字段映射已新增并保存');
+}
+
+/* ================= 搜索 ================= */
+function openSearch() {
+  document.getElementById('searchMask').classList.add('open');
+  const d = document.getElementById('searchDlg');
+  d.style.display = 'block';
+  const input = document.getElementById('gsInput');
+  input.value = '';
+  renderTeachers('');
+  setTimeout(function () { input.focus(); }, 30);
+}
+function closeSearch() {
+  document.getElementById('searchMask').classList.remove('open');
+  document.getElementById('searchDlg').style.display = 'none';
+}
+function renderTeachers(kw) {
+  const box = document.getElementById('gsTeachers');
+  const list = MOCK_TEACHERS.filter(function (t) { return !kw || t.name.indexOf(kw) >= 0 || t.dept.indexOf(kw) >= 0; });
+  box.innerHTML = '';
+  list.forEach(function (t) {
+    const b = document.createElement('button');
+    b.className = 'w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-[#f2f7ff] text-left';
+    b.onclick = function () { launchTeacher(t.name); };
+    b.innerHTML = '<span class="w-8 h-8 rounded-lg bg-[#eaf2ff] text-[#1677ff] grid place-items-center text-[12px] font-semibold">' + t.name.slice(0, 1) + '</span>' +
+      '<span><span class="block text-[13px] font-medium">' + t.name + ' · ' + t.title + '</span><span class="block text-[11.5px] text-[#8a94a6]">' + t.uni + ' · ' + t.dept + '</span></span>' +
+      '<span class="ml-auto tag tag-blue">启动流水线</span>';
+    box.appendChild(b);
+  });
+  if (!list.length) box.innerHTML = '<div class="px-2 py-6 text-center text-[12px] text-[#8a94a6]">未找到匹配教师</div>';
+}
+function launchTeacher(name) {
+  const s = Object.assign(dfState(), { lastRun: { id: 'DF-RUN-20261108-014', teacher: name, status: 'running', progress: 0, startedAt: '2026-11-08 13:20' } });
+  localStorage.setItem(DF_KEY, JSON.stringify(s));
+  location.href = 'run.html?teacher=' + encodeURIComponent(name) + '&auto=1';
+}
+document.getElementById('gsBtn').addEventListener('click', openSearch);
+document.getElementById('gsInput').addEventListener('input', function (e) { renderTeachers(e.target.value.trim()); });
+document.getElementById('gsInput').addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.value.trim()) launchTeacher(e.target.value.trim()); });
+document.addEventListener('keydown', function (e) {
+  const key = (e.key || '').toLowerCase();
+  if ((e.metaKey || e.ctrlKey) && key === 'k') { e.preventDefault(); openSearch(); }
+  if (e.key === 'Escape') { closeAllPopups(); }
+});
+document.getElementById('bellBtn').addEventListener('click', function () { toast('3 条未读通知：解析超时 / 数据源中断 / 低置信度待审'); });
+
+setBadges();
+</script>
+</body>
+</html>
